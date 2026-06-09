@@ -8,7 +8,7 @@
 
 @layer base {
   html {
-    color-scheme: light only;
+    color-scheme: light dark;
   }
 }
 
