@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "Bash(npx next *)",
+      "WebFetch(domain:www.cleanpng.com)",
+      "Bash(curl -sL -o rm-pickle-rick.webp \"https://icon2.cleanpng.com/20180915/tsg/kisspng-rick-morty-pickle-rick-with-laser-pop-vinyl-fig-1713940460298.webp\")",
+      "Bash(sips -s format png rm-pickle-rick.webp --out rm-pickle-rick.png)",
+      "Bash(git add *)"
     ]
   }
 }

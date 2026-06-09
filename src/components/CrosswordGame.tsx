@@ -232,6 +232,7 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
 
   const handleKey = useCallback((e: KeyboardEvent) => {
     if (!selected) return
+    if (e.target === hiddenInputRef.current && /^[а-яёА-ЯЁa-zA-Z]$/.test(e.key)) return
     const { row, col } = selected
 
     if (e.key === 'Backspace') {
