@@ -6,6 +6,30 @@
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+:root {
+  --bg: #ffffff;
+  --surface: #f9fafb;
+  --surface-2: #f3f4f6;
+  --border: #e5e7eb;
+  --text: #111827;
+  --text-secondary: #374151;
+  --text-muted: #9ca3af;
+  --text-light: #d1d5db;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0b0b0d;
+  --surface: #18181b;
+  --surface-2: #27272a;
+  --border: #3f3f46;
+  --text: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --text-muted: #a1a1aa;
+  --text-light: #71717a;
+  color-scheme: dark;
+}
+
 @layer base {
   html {
     color-scheme: light dark;
@@ -19,12 +43,13 @@
 }
 
 body {
-  background: #ffffff;
-  color: #111827;
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-sans);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 ::selection {

@@ -9,7 +9,7 @@ export default function LogoutButton({ isAdminCookie }: { isAdminCookie: boolean
 
   const onClick = async () => {
     if (isAdminCookie) {
-      document.cookie = `${ADMIN_COOKIE}=; path=/; max-age=0`
+      await fetch('/api/admin-logout', { method: 'POST' })
     } else {
       const supabase = createClient()
       await supabase.auth.signOut()

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin-client'
 import CrosswordEditor from '@/components/admin/CrosswordEditor'
 import type { EditorWord } from '@/lib/crossword/editor'
 import type { Clue } from '@/lib/crossword/types'
@@ -8,7 +8,7 @@ import type { CrosswordRow } from '@/lib/supabase/types'
 
 export default async function EditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const res = await supabase
     .from('crosswords')
     .select('*')

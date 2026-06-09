@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CrosswordData } from '@/lib/crossword/types'
 import { buildCells, buildCorrectLetters } from '@/lib/crossword/grid'
 import { getClueKey } from '@/lib/crossword/clue-utils'
 import { formatTime } from '@/lib/crossword/format'
 import { saveGame } from '@/lib/gameHistory'
+import ResultSheet from '@/components/ResultSheet'
 
 import Particles from './effects/Particles'
 import PortalDrips from './effects/PortalDrips'
@@ -26,6 +27,8 @@ import { useCrosswordInput } from './hooks/useCrosswordInput'
 
 export default function CrosswordGame({ crossword }: { crossword: CrosswordData }) {
   useHideMainNav()
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [rank, setRank] = useState<number | null>(null)
 
   const cells = useMemo(() => buildCells(crossword), [crossword])
   const correctLetters = useMemo(() => buildCorrectLetters(crossword), [crossword])
@@ -44,15 +47,22 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
     cells,
     selected: sel.selected,
     setSelected: sel.setSelected,
+    moveSelected: sel.moveSelected,
     direction: sel.direction,
+    directionRef: sel.directionRef,
     hiddenInputRef,
     onSolved: () => {
-      saveGame({
-        crosswordId: crossword.id,
-        time: timerRef.current,
-        date: new Date().toISOString(),
-        solved: true,
+      const t = timerRef.current
+      saveGame({ crosswordId: crossword.id, time: t, date: new Date().toISOString(), solved: true })
+      fetch('/api/game-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ crossword_id: crossword.id, time_seconds: t, solved: true }),
       })
+        .then(r => r.json())
+        .then(d => { if (d.rank) setRank(d.rank) })
+        .catch(() => null)
+      setSheetOpen(true)
     },
   })
 
@@ -179,6 +189,14 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
           />
         </div>
       </main>
+
+      <ResultSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        time={timer}
+        rank={rank}
+        crosswordTitle={crossword.title}
+      />
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Flame, User } from 'lucide-react'
+import ThemeToggle from './ThemeToggle'
 
 const links = [
   { href: '/', label: 'кроссворды', mobileLabel: 'главная', icon: '🧩', Icon: Home },
@@ -18,9 +19,9 @@ export default function Nav() {
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      background: 'rgba(255, 255, 255, 0.85)',
+      background: 'var(--bg)',
       backdropFilter: 'blur(12px)',
-      borderBottom: '1px solid #f3f4f6',
+      borderBottom: '1px solid var(--border)',
     }}>
       <div style={{
         maxWidth: '960px',
@@ -63,8 +64,8 @@ export default function Nav() {
                   borderRadius: '8px',
                   fontSize: '13px',
                   fontWeight: isActive ? 500 : 400,
-                  color: isActive ? '#111827' : '#9ca3af',
-                  background: isActive ? '#f3f4f6' : 'transparent',
+                  color: isActive ? 'var(--text)' : 'var(--text-muted)',
+                  background: isActive ? 'var(--surface-2)' : 'transparent',
                   transition: 'all 0.15s ease',
                 }}
               >
@@ -74,6 +75,7 @@ export default function Nav() {
               </Link>
             )
           })}
+          <ThemeToggle />
         </div>
       </div>
     </nav>

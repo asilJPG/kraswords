@@ -38,6 +38,7 @@ export async function updateSession(request: NextRequest) {
   const isAdminRoute = pathname.startsWith('/admin')
   const isProtectedRoute = PROTECTED_PREFIXES.some(p => pathname.startsWith(p))
   const isLoginRoute = pathname === '/login'
+  const isSetupRoute = pathname === '/setup-profile'
 
   if ((isAdminRoute || isProtectedRoute) && !user && !isAdmin) {
     const url = request.nextUrl.clone()
@@ -46,11 +47,33 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  if (isSetupRoute && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
   if (isLoginRoute && (user || isAdmin)) {
     const url = request.nextUrl.clone()
-    url.pathname = '/admin'
+    url.pathname = isAdmin ? '/admin' : '/'
     url.search = ''
     return NextResponse.redirect(url)
+  }
+
+  // Logged-in Supabase users without a profile/username must finish setup
+  const isApiRoute = pathname.startsWith('/api')
+  if (user && !isSetupRoute && !isAdminRoute && !isApiRoute) {
+    const { data: profile } = await (supabase.from('profiles') as any)
+      .select('username')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.username) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/setup-profile'
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
   }
 
   return response

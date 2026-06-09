@@ -1,48 +1,29 @@
-import { createClient } from '@/lib/supabase/client'
 import type { CrosswordRow, CrosswordInsert } from '@/lib/supabase/types'
 
-// We cast to `any` at the .from() boundary because our handwritten Database
-// types are minimal — Supabase's generated types would be richer.
-// Output types are still strict via the explicit return types below.
-
 export async function listCrosswords(): Promise<CrosswordRow[]> {
-  const supabase = createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.from('crosswords') as any)
-    .select('*')
-    .order('updated_at', { ascending: false })
-  if (error) throw error
-  return (data as CrosswordRow[]) ?? []
+  const res = await fetch('/api/admin/crosswords', { cache: 'no-store' })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
 }
 
 export async function getCrosswordById(id: string): Promise<CrosswordRow | null> {
-  const supabase = createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.from('crosswords') as any)
-    .select('*')
-    .eq('id', id)
-    .single()
-  if (error) {
-    if (error.code === 'PGRST116') return null
-    throw error
-  }
-  return data as CrosswordRow
+  const res = await fetch(`/api/admin/crosswords/${id}`, { cache: 'no-store' })
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
 }
 
 export async function saveCrossword(row: CrosswordInsert): Promise<CrosswordRow> {
-  const supabase = createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.from('crosswords') as any)
-    .upsert(row, { onConflict: 'id' })
-    .select()
-    .single()
-  if (error) throw error
-  return data as CrosswordRow
+  const res = await fetch('/api/admin/crosswords', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(row),
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
 }
 
 export async function deleteCrossword(id: string): Promise<void> {
-  const supabase = createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('crosswords') as any).delete().eq('id', id)
-  if (error) throw error
+  const res = await fetch(`/api/admin/crosswords/${id}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error(await res.text())
 }

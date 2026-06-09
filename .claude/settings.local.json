@@ -6,7 +6,18 @@
       "Bash(git stash *)",
       "Bash(git pull *)",
       "Bash(git checkout *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(node -e ' *)",
+      "Bash(node *)",
+      "Bash(grep -roh \"#[0-9a-fA-F]\\\\{3,6\\\\}\" src --include=\"*.tsx\")",
+      "Bash(netstat -ano)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(cat .claude/settings.local.json)",
+      "Bash(where ollama *)",
+      "Bash(where lmstudio *)",
+      "Bash(ollama list *)",
+      "Bash(curl -s http://localhost:11434/api/tags)",
+      "Bash(git add *)"
     ]
   }
 }

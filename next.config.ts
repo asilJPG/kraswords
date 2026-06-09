@@ -1,17 +1,20 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV === 'development'
+
 const nextConfig: NextConfig = {
   async headers() {
+    const scriptSrc = isDev
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+      : "script-src 'self' 'unsafe-inline'"
+
     return [
       {
         source: "/(.*)",
         headers: [
           {
             key: "Content-Security-Policy",
-            // unsafe-eval удалён — он не нужен и открывает XSS.
-            // unsafe-inline оставлен для совместимости с Next.js hydration.
-            // Для полной защиты используйте nonce-based CSP.
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';",
+            value: `default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none';`,
           },
           {
             key: "X-Frame-Options",

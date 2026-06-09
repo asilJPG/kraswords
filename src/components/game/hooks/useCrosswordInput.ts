@@ -7,13 +7,15 @@ interface Params {
   cells: Cell[][]
   selected: { row: number; col: number } | null
   setSelected: (s: { row: number; col: number } | null) => void
+  moveSelected: (row: number, col: number) => void
   direction: Direction
+  directionRef: React.RefObject<Direction>
   hiddenInputRef: React.RefObject<HTMLInputElement | null>
   onSolved: () => void
 }
 
 export function useCrosswordInput({
-  crossword, cells, selected, setSelected, direction, hiddenInputRef, onSolved,
+  crossword, cells, selected, setSelected, moveSelected, direction, directionRef, hiddenInputRef, onSolved,
 }: Params) {
   const [input, setInput] = useState<Record<string, string>>({})
   const [checked, setChecked] = useState(false)
@@ -31,16 +33,17 @@ export function useCrosswordInput({
 
   const advanceCaret = useCallback((row: number, col: number) => {
     const size = crossword.size
-    if (direction === 'across') {
+    const dir = directionRef.current
+    if (dir === 'across') {
       let nc = col + 1
       while (nc < size && cells[row][nc].isBlack) nc++
-      if (nc < size) setSelected({ row, col: nc })
+      if (nc < size) moveSelected(row, nc)
     } else {
       let nr = row + 1
       while (nr < size && cells[nr]?.[col]?.isBlack) nr++
-      if (nr < size) setSelected({ row: nr, col })
+      if (nr < size) moveSelected(nr, col)
     }
-  }, [direction, cells, crossword.size, setSelected])
+  }, [directionRef, cells, crossword.size, moveSelected])
 
   const writeLetter = useCallback((letter: string) => {
     if (!selected) return
@@ -63,16 +66,17 @@ export function useCrosswordInput({
       setInput(prev => { const n = { ...prev }; delete n[key]; return n })
       return
     }
-    const nr = direction === 'down' ? row - 1 : row
-    const nc = direction === 'across' ? col - 1 : col
+    const dir = directionRef.current
+    const nr = dir === 'down' ? row - 1 : row
+    const nc = dir === 'across' ? col - 1 : col
     if (nr >= 0 && nc >= 0 && !cells[nr]?.[nc]?.isBlack) {
-      setSelected({ row: nr, col: nc })
+      moveSelected(nr, nc)
       const k = `${nr},${nc}`
       if (inputRef.current[k]) {
         setInput(prev => { const n = { ...prev }; delete n[k]; return n })
       }
     }
-  }, [selected, direction, cells, setSelected])
+  }, [selected, directionRef, cells, moveSelected])
 
   // physical keyboard
   const handleKey = useCallback((e: KeyboardEvent) => {

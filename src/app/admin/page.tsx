@@ -1,12 +1,12 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin-client'
 import DeleteButton from '@/components/admin/DeleteButton'
 import type { CrosswordRow } from '@/lib/supabase/types'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminListPage() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const res = await supabase
     .from('crosswords')
     .select('*')
