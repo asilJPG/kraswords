@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
-import { CrosswordData, Clue, Direction, ThemeConfig } from '@/lib/crosswords'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
+import { CrosswordData, Clue, Direction, ThemeConfig, verifyAnswers } from '@/lib/crosswords'
+import { saveGame } from '@/lib/gameHistory'
 import Link from 'next/link'
 
 interface Cell {
@@ -162,7 +163,10 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
   const [timer, setTimer] = useState(0)
   const [running, setRunning] = useState(false)
   const inputRef = useRef(input)
-  inputRef.current = input
+  useEffect(() => {
+    inputRef.current = input
+  })
+  const hiddenInputRef = useRef<HTMLInputElement>(null)
 
   const theme = crossword.theme
   const isDark = theme.id !== 'default' && theme.id !== 'nature'
@@ -199,6 +203,8 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
     if (cells[row][col].isBlack) return
     if (!running) setRunning(true)
 
+    setTimeout(() => hiddenInputRef.current?.focus(), 0)
+
     if (selected?.row === row && selected?.col === col) {
       const newDir: Direction = direction === 'across' ? 'down' : 'across'
       setDirection(newDir)
@@ -221,15 +227,8 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
   }, [cells, selected, direction, running, getActiveClue])
 
   const checkSolved = useCallback((currentInput: Record<string, string>) => {
-    for (const clue of crossword.clues) {
-      const positions = getCellsForClue(clue)
-      for (let i = 0; i < clue.answer.length; i++) {
-        const [r, c] = positions[i]
-        if (currentInput[`${r},${c}`] !== clue.answer[i]) return false
-      }
-    }
-    return true
-  }, [crossword.clues])
+    return verifyAnswers(crossword, currentInput).correct
+  }, [crossword])
 
   const handleKey = useCallback((e: KeyboardEvent) => {
     if (!selected) return
@@ -273,18 +272,63 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
         if (nr < size) setSelected({ row: nr, col })
       }
 
-      if (checkSolved(newInput)) { setSolved(true); setRunning(false) }
+      if (checkSolved(newInput)) { setSolved(true); setRunning(false); saveGame({ crosswordId: crossword.id, time: timer, date: new Date().toISOString(), solved: true }) }
     }
   }, [selected, direction, cells, crossword, getActiveClue, checkSolved])
 
+  const handleKeyRef = useRef(handleKey)
   useEffect(() => {
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
-  }, [handleKey])
+    handleKeyRef.current = handleKey
+  })
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => handleKeyRef.current(e)
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
+  const handleMobileInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
+    const val = e.currentTarget.value
+    e.currentTarget.value = ''
+    if (!selected || !val) return
+
+    const letter = val.slice(-1).toUpperCase()
+    if (!/^[А-ЯЁA-Z]$/.test(letter)) return
+
+    const { row, col } = selected
+    const newInput = { ...inputRef.current, [`${row},${col}`]: letter }
+    setInput(newInput)
+    setChecked(false)
+
+    const size = crossword.size
+    if (direction === 'across') {
+      let nc = col + 1
+      while (nc < size && cells[row][nc].isBlack) nc++
+      if (nc < size) setSelected({ row, col: nc })
+    } else {
+      let nr = row + 1
+      while (nr < size && cells[nr]?.[col]?.isBlack) nr++
+      if (nr < size) setSelected({ row: nr, col })
+    }
+
+    if (checkSolved(newInput)) { setSolved(true); setRunning(false); saveGame({ crosswordId: crossword.id, time: timer, date: new Date().toISOString(), solved: true }) }
+  }, [selected, direction, cells, crossword.size, checkSolved])
 
   const activeClueObj = activeClue
     ? crossword.clues.find(c => getClueKey(c) === activeClue) || null
     : null
+
+  const correctLetters = useMemo(() => {
+    const map: Record<string, string> = {}
+    for (const clue of crossword.clues) {
+      const positions = getCellsForClue(clue)
+      for (let i = 0; i < clue.answer.length; i++) {
+        const [r, c] = positions[i]
+        map[`${r},${c}`] = clue.answer[i]
+      }
+    }
+    return map
+  }, [crossword.clues])
 
   const isHighlighted = (row: number, col: number) => {
     if (!activeClueObj) return false
@@ -295,16 +339,9 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
     if (!checked) return 'neutral'
     const userLetter = input[`${row},${col}`]
     if (!userLetter) return 'neutral'
-    for (const clue of crossword.clues) {
-      const positions = getCellsForClue(clue)
-      for (let i = 0; i < positions.length; i++) {
-        const [r, c] = positions[i]
-        if (r === row && c === col) {
-          return userLetter === clue.answer[i] ? 'correct' : 'wrong'
-        }
-      }
-    }
-    return 'neutral'
+    const expected = correctLetters[`${row},${col}`]
+    if (!expected) return 'neutral'
+    return userLetter === expected ? 'correct' : 'wrong'
   }
 
   const handleCheck = () => setChecked(true)
@@ -317,7 +354,15 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
     setSelected(null)
   }
 
-  const cellSize = Math.min(48, Math.floor((Math.min(460, typeof window !== 'undefined' ? window.innerWidth - 40 : 460)) / crossword.size))
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 460)
+  useEffect(() => {
+    const onResize = () => setWindowWidth(window.innerWidth)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  const isMobile = windowWidth < 640
+  const maxGrid = isMobile ? windowWidth - 24 : 460
+  const cellSize = Math.min(48, Math.floor(maxGrid / crossword.size))
   const acrossClues = crossword.clues.filter(c => c.direction === 'across')
   const downClues = crossword.clues.filter(c => c.direction === 'down')
 
@@ -331,6 +376,43 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
       zIndex: 200,
       fontFamily: theme.fontFamily || 'inherit',
     }}>
+      <input
+        ref={hiddenInputRef}
+        onInput={handleMobileInput}
+        onKeyDown={(e) => {
+          if (e.key === 'Backspace' && selected) {
+            e.preventDefault()
+            const { row, col } = selected
+            const key = `${row},${col}`
+            if (inputRef.current[key]) {
+              setInput(prev => { const n = { ...prev }; delete n[key]; return n })
+            } else {
+              const nr = direction === 'down' ? row - 1 : row
+              const nc = direction === 'across' ? col - 1 : col
+              if (nr >= 0 && nc >= 0 && !cells[nr]?.[nc]?.isBlack) {
+                setSelected({ row: nr, col: nc })
+                const k = `${nr},${nc}`
+                if (inputRef.current[k]) setInput(prev => { const n = { ...prev }; delete n[k]; return n })
+              }
+            }
+          }
+        }}
+        style={{
+          position: 'fixed',
+          top: '-100px',
+          left: '-100px',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          fontSize: '16px',
+        }}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        inputMode="text"
+        enterKeyHint="next"
+      />
       <Particles theme={theme} />
       <PortalDrips theme={theme} />
       <MagicSparkles theme={theme} />
@@ -390,7 +472,7 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
       <main style={{
         maxWidth: '960px',
         margin: '0 auto',
-        padding: '28px 20px 60px',
+        padding: isMobile ? '16px 12px 40px' : '28px 20px 60px',
         position: 'relative',
         zIndex: 1,
       }}>
@@ -448,7 +530,9 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
 
         <div style={{
           display: 'flex',
-          gap: '36px',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          gap: isMobile ? '20px' : '36px',
           flexWrap: 'wrap',
         }}>
           {/* grid */}
@@ -580,9 +664,10 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
           {/* clues */}
           <div style={{
             flex: 1,
-            minWidth: '200px',
+            minWidth: isMobile ? '100%' : '200px',
+            width: isMobile ? '100%' : 'auto',
             display: 'flex',
-            gap: '28px',
+            gap: isMobile ? '20px' : '28px',
             flexWrap: 'wrap',
           }}>
             <div style={{ flex: 1, minWidth: '160px' }}>

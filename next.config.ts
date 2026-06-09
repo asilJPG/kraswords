@@ -8,7 +8,10 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';",
+            // unsafe-eval удалён — он не нужен и открывает XSS.
+            // unsafe-inline оставлен для совместимости с Next.js hydration.
+            // Для полной защиты используйте nonce-based CSP.
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';",
           },
           {
             key: "X-Frame-Options",

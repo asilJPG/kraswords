@@ -1,92 +1,62 @@
 import { crosswords } from '@/lib/crosswords'
-
-const mockLeaders = [
-  { name: '😎 макс', time: '2:14', crosswords: 6 },
-  { name: '🧠 аня', time: '2:31', crosswords: 5 },
-  { name: '🔥 дима', time: '3:05', crosswords: 6 },
-  { name: '💀 катя', time: '3:12', crosswords: 4 },
-  { name: '🎯 олег', time: '3:45', crosswords: 5 },
-  { name: '🌟 лиза', time: '4:01', crosswords: 3 },
-  { name: '🎮 артём', time: '4:22', crosswords: 4 },
-  { name: '🧩 ира', time: '4:50', crosswords: 3 },
-]
+import Link from 'next/link'
 
 export default function TopPage() {
+  const sorted = [...crosswords].sort((a, b) => b.solvers - a.solvers)
+
   return (
-    <main style={{ maxWidth: '640px', margin: '0 auto', padding: '40px 20px' }}>
-      <h1 style={{ fontSize: '28px', fontWeight: 700, letterSpacing: '-1px', marginBottom: '8px' }}>
-        топ игроков
+    <main style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 16px 40px' }}>
+      <h1 style={{ fontSize: '28px', fontWeight: 700, letterSpacing: '-1px', marginBottom: '6px' }}>
+        топ кроссвордов
       </h1>
-      <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '40px' }}>
-        лучшие по среднему времени решения
+      <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '32px' }}>
+        по количеству решивших
       </p>
 
       <div style={{
-        background: '#ffffff',
+        background: '#fff',
         borderRadius: '16px',
         border: '1px solid #f3f4f6',
         overflow: 'hidden',
       }}>
-        {mockLeaders.map((leader, i) => (
-          <div key={i} style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '16px 20px',
-            borderBottom: i < mockLeaders.length - 1 ? '1px solid #f9fafb' : 'none',
-            gap: '16px',
-          }}>
-            <span style={{
-              width: '28px',
-              fontSize: '14px',
-              fontWeight: 700,
-              color: i < 3 ? '#111827' : '#d1d5db',
-              fontVariantNumeric: 'tabular-nums',
+        {sorted.map((cw, i) => (
+          <Link key={cw.id} href={`/play/${cw.id}`}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '16px 20px',
+              borderBottom: i < sorted.length - 1 ? '1px solid #f9fafb' : 'none',
+              gap: '14px',
+              cursor: 'pointer',
+              transition: 'background 0.1s',
             }}>
-              {i + 1}
-            </span>
-            <span style={{ fontSize: '16px', flex: 1, fontWeight: 500 }}>
-              {leader.name}
-            </span>
-            <span style={{ fontSize: '13px', color: '#9ca3af' }}>
-              {leader.crosswords} решено
-            </span>
-            <span style={{
-              fontSize: '15px',
-              fontWeight: 600,
-              fontVariantNumeric: 'tabular-nums',
-              color: i === 0 ? '#111827' : '#6b7280',
-            }}>
-              {leader.time}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div style={{
-        marginTop: '48px',
-      }}>
-        <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>
-          по кроссвордам
-        </h2>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-          gap: '12px',
-        }}>
-          {crosswords.map(cw => (
-            <div key={cw.id} style={{
-              background: '#f9fafb',
-              borderRadius: '12px',
-              padding: '16px',
-            }}>
-              <div style={{ fontSize: '20px', marginBottom: '8px' }}>{cw.emoji}</div>
-              <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>{cw.title}</div>
-              <div style={{ fontSize: '12px', color: '#9ca3af' }}>
-                лучшее: 1:42
+              <span style={{
+                width: '28px',
+                fontSize: i < 3 ? '18px' : '14px',
+                fontWeight: 700,
+                color: i < 3 ? '#111827' : '#d1d5db',
+                textAlign: 'center',
+              }}>
+                {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+              </span>
+              <span style={{ fontSize: '22px' }}>{cw.emoji}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '15px', fontWeight: 500 }}>{cw.title}</div>
+                <div style={{ fontSize: '12px', color: '#9ca3af' }}>{cw.category}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {cw.solvers.toLocaleString('ru')}
+                </div>
+                <div style={{ fontSize: '11px', color: '#9ca3af' }}>решили</div>
               </div>
             </div>
-          ))}
-        </div>
+          </Link>
+        ))}
       </div>
     </main>
   )

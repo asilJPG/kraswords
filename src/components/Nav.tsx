@@ -31,7 +31,7 @@ export default function Nav() {
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
-        <Link href="/" style={{
+        <Link href="/" className="nav-logo" style={{
           fontWeight: 700,
           fontSize: '18px',
           letterSpacing: '-0.5px',
@@ -42,7 +42,7 @@ export default function Nav() {
           <span>красвордс</span>
         </Link>
 
-        <div style={{
+        <div className="nav-links" style={{
           display: 'flex',
           gap: '4px',
         }}>
