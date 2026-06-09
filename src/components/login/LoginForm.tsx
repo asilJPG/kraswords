@@ -9,7 +9,7 @@ export default function LoginForm() {
   const searchParams = useSearchParams()
   const next = searchParams.get('next') || '/admin'
 
-  const [email, setEmail] = useState('')
+  const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -18,8 +18,26 @@ export default function LoginForm() {
     e.preventDefault()
     setError(null)
     setLoading(true)
+
+    if (login.trim().toLowerCase() === 'admin') {
+      const res = await fetch('/api/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'admin', password }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error ?? 'Неверный логин или пароль')
+        setLoading(false)
+        return
+      }
+      router.push('/admin')
+      router.refresh()
+      return
+    }
+
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({ email: login, password })
     if (error) {
       setError(error.message)
       setLoading(false)
@@ -45,20 +63,21 @@ export default function LoginForm() {
         letterSpacing: '-0.5px',
         marginBottom: '4px',
       }}>
-        вход в админку
+        вход
       </h1>
       <p style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '24px' }}>
-        красвордс · конструктор
+        красвордс
       </p>
 
-      <label style={labelStyle}>email</label>
+      <label style={labelStyle}>логин</label>
       <input
-        type="email"
-        autoComplete="email"
+        type="text"
+        autoComplete="username"
         required
-        value={email}
-        onChange={e => setEmail(e.target.value)}
+        value={login}
+        onChange={e => setLogin(e.target.value)}
         style={inputStyle}
+        placeholder="email или admin"
       />
 
       <label style={{ ...labelStyle, marginTop: '14px' }}>пароль</label>

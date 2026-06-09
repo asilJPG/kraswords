@@ -1,13 +1,22 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { ADMIN_COOKIE, ADMIN_TOKEN } from '@/lib/admin-auth'
 import LogoutButton from '@/components/admin/LogoutButton'
 import HideMainNav from '@/components/admin/HideMainNav'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login?next=/admin')
+  const cookieStore = await cookies()
+  const isAdminCookie = cookieStore.get(ADMIN_COOKIE)?.value === ADMIN_TOKEN
+
+  let displayName: string = 'admin'
+  if (!isAdminCookie) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect('/login?next=/admin')
+    displayName = user.email ?? 'admin'
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#fafafa' }}>
@@ -29,8 +38,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
           <Link href="/admin" style={navLink}>кроссворды</Link>
           <Link href="/admin/new" style={navLink}>+ новый</Link>
-          <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#9ca3af' }}>{user.email}</span>
-          <LogoutButton />
+          <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#9ca3af' }}>{displayName}</span>
+          <LogoutButton isAdminCookie={isAdminCookie} />
         </div>
       </header>
 

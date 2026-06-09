@@ -1,11 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from './types'
+import { ADMIN_COOKIE, ADMIN_TOKEN } from '@/lib/admin-auth'
 
-/**
- * Refresh session cookies + gate /admin routes for unauthenticated users.
- * Called from root proxy.ts.
- */
+const PROTECTED_PREFIXES = ['/play', '/profile']
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request })
 
@@ -30,21 +29,24 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: must call getUser() to refresh session.
   const { data: { user } } = await supabase.auth.getUser()
+
+  const adminCookieValue = request.cookies.get(ADMIN_COOKIE)?.value
+  const isAdmin = adminCookieValue === ADMIN_TOKEN
 
   const pathname = request.nextUrl.pathname
   const isAdminRoute = pathname.startsWith('/admin')
+  const isProtectedRoute = PROTECTED_PREFIXES.some(p => pathname.startsWith(p))
   const isLoginRoute = pathname === '/login'
 
-  if (isAdminRoute && !user) {
+  if ((isAdminRoute || isProtectedRoute) && !user && !isAdmin) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('next', pathname)
     return NextResponse.redirect(url)
   }
 
-  if (isLoginRoute && user) {
+  if (isLoginRoute && (user || isAdmin)) {
     const url = request.nextUrl.clone()
     url.pathname = '/admin'
     url.search = ''
