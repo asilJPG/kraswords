@@ -2,12 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Home, Flame, User } from 'lucide-react'
 
 const links = [
-  { href: '/', label: 'кроссворды', icon: '🧩' },
-  { href: '/top', label: 'топ', icon: '🏆' },
-  { href: '/events', label: 'ивенты', icon: '📅' },
-  { href: '/profile', label: 'профиль', icon: '😎' },
+  { href: '/', label: 'кроссворды', mobileLabel: 'главная', icon: '🧩', Icon: Home },
+  { href: '/top', label: 'топ', mobileLabel: 'топ', icon: '🏆', Icon: Flame },
+  { href: '/profile', label: 'профиль', mobileLabel: 'профиль', icon: '😎', Icon: User },
 ]
 
 export default function Nav() {
@@ -68,8 +68,9 @@ export default function Nav() {
                   transition: 'all 0.15s ease',
                 }}
               >
-                <span style={{ fontSize: '14px' }}>{link.icon}</span>
-                <span>{link.label}</span>
+                <link.Icon className="nav-mobile" size={22} strokeWidth={isActive ? 2.2 : 1.8} />
+                <span className="nav-desktop">{link.label}</span>
+                <span className="nav-mobile">{link.mobileLabel}</span>
               </Link>
             )
           })}

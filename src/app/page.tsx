@@ -1,10 +1,25 @@
-import { crosswords, categories } from '@/lib/crosswords'
 import CrosswordList from '@/components/CrosswordList'
 import Link from 'next/link'
+import { fetchPublishedCrosswords } from '@/lib/crossword/server-api'
 
-export default function Home() {
+export const dynamic = 'force-dynamic'
+
+export default async function Home() {
+  const crosswords = await fetchPublishedCrosswords()
+  const categories = [...new Set(crosswords.map(c => c.category))]
   const featured = crosswords[0]
   const topByVisits = [...crosswords].sort((a, b) => b.solvers - a.solvers).slice(0, 3)
+
+  if (!featured) {
+    return (
+      <main style={{ maxWidth: '960px', margin: '0 auto', padding: '60px 16px', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>пока пусто</h1>
+        <p style={{ color: '#9ca3af', fontSize: '14px' }}>
+          скоро появятся первые кроссворды
+        </p>
+      </main>
+    )
+  }
 
   return (
     <main style={{ maxWidth: '960px', margin: '0 auto', padding: '24px 16px 40px' }}>

@@ -95,8 +95,28 @@ button {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
+/* Desktop: hide mobile nav elements */
+.nav-mobile {
+  display: none !important;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
 /* Mobile bottom nav */
 @media (max-width: 640px) {
+  .nav-desktop {
+    display: none !important;
+  }
+  .nav-mobile {
+    display: inline-flex !important;
+  }
+
   [data-main-nav] {
     position: fixed !important;
     top: auto !important;
