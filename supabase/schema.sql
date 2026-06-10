@@ -100,16 +100,31 @@ create policy "auth_read_all" on public.crosswords
   for select to authenticated using (true);
 
 drop policy if exists "auth_insert" on public.crosswords;
-create policy "auth_insert" on public.crosswords
-  for insert to authenticated with check (true);
+drop policy if exists "admin_insert" on public.crosswords;
+create policy "admin_insert" on public.crosswords
+  for insert to authenticated
+  with check (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
 
 drop policy if exists "auth_update" on public.crosswords;
-create policy "auth_update" on public.crosswords
-  for update to authenticated using (true) with check (true);
+drop policy if exists "admin_update" on public.crosswords;
+create policy "admin_update" on public.crosswords
+  for update to authenticated
+  using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  )
+  with check (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
 
 drop policy if exists "auth_delete" on public.crosswords;
-create policy "auth_delete" on public.crosswords
-  for delete to authenticated using (true);
+drop policy if exists "admin_delete" on public.crosswords;
+create policy "admin_delete" on public.crosswords
+  for delete to authenticated
+  using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
 
 -- ============================================================
 -- RLS — game_results

@@ -73,6 +73,7 @@ SUPABASE_SERVICE_ROLE_KEY=…  ← КРИТИЧНО, без него API кра�
 3. `supabase/migrations/001_game_results_unique.sql` (UNIQUE constraint на (user_id, crossword_id))
 4. `supabase/migrations/002_profile_avatar.sql` (jsonb avatar column)
 5. `supabase/migrations/003_crossword_theme_custom.sql` (theme_custom для кастомных палитр)
+6. `supabase/migrations/004_crosswords_admin_only.sql` (RLS на crosswords — только admin может писать; критичный security fix)
 
 Storage bucket `banners` — создаётся вручную в Supabase Dashboard → Storage (политики раскомментированы в schema.sql).
 
