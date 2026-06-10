@@ -22,15 +22,46 @@ export default function BottomSheet({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-end justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 300,
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'rgba(0,0,0,0.4)',
+        backdropFilter: 'blur(4px)',
+      }} />
       <div
         ref={ref}
         onClick={e => e.stopPropagation()}
-        className="relative w-full max-w-[480px] bg-white rounded-t-2xl px-4 pt-3 pb-6 animate-slide-up"
-        style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}
+        className="animate-slide-up"
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: '480px',
+          background: '#fff',
+          borderRadius: '24px 24px 0 0',
+          padding: '12px 18px 24px',
+          paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+        }}
       >
-        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
+        <div style={{
+          width: '40px',
+          height: '4px',
+          background: '#e5e7eb',
+          borderRadius: '999px',
+          margin: '0 auto 12px',
+        }} />
         {children}
       </div>
     </div>
