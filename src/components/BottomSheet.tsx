@@ -47,18 +47,21 @@ export default function BottomSheet({
           position: 'relative',
           width: '100%',
           maxWidth: '480px',
-          background: '#fff',
+          background: 'var(--bg)',
+          color: 'var(--text)',
           borderRadius: '24px 24px 0 0',
           padding: '12px 18px 24px',
           paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
           maxHeight: '90vh',
           overflowY: 'auto',
+          border: '1px solid var(--border)',
+          borderBottom: 'none',
         }}
       >
         <div style={{
           width: '40px',
           height: '4px',
-          background: '#e5e7eb',
+          background: 'var(--border-strong)',
           borderRadius: '999px',
           margin: '0 auto 12px',
         }} />

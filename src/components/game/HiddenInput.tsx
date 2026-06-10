@@ -22,12 +22,16 @@ const HiddenInput = forwardRef<HTMLInputElement, Props>(function HiddenInput(
       }}
       style={{
         position: 'fixed',
-        top: '-100px',
-        left: '-100px',
+        bottom: '0',
+        left: '0',
         width: '1px',
         height: '1px',
         opacity: 0,
+        pointerEvents: 'none',
         fontSize: '16px',
+        border: 'none',
+        background: 'transparent',
+        zIndex: -1,
       }}
       autoComplete="off"
       autoCorrect="off"

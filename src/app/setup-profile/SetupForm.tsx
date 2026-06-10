@@ -38,14 +38,15 @@ export default function SetupForm({ userId }: { userId: string }) {
 
   return (
     <form onSubmit={onSubmit} style={{
-      width: '100%', maxWidth: '360px', background: '#fff',
+      width: '100%', maxWidth: '360px',
+      background: 'var(--bg)', color: 'var(--text)',
       borderRadius: '20px', padding: '32px',
-      boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid #f3f4f6',
+      boxShadow: 'var(--shadow-pop)', border: '1px solid var(--border)',
     }}>
       <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '4px' }}>
         выбери юзернейм
       </h1>
-      <p style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '24px' }}>
+      <p style={{ fontSize: '13px', color: 'var(--text-light)', marginBottom: '24px' }}>
         он будет виден в лидерборде
       </p>
 
@@ -60,15 +61,15 @@ export default function SetupForm({ userId }: { userId: string }) {
         placeholder="например: швифти"
         maxLength={20}
       />
-      <div style={{ fontSize: '11px', color: '#d1d5db', marginTop: '4px' }}>
+      <div style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px' }}>
         2–20 символов, только буквы/цифры/_
       </div>
 
       {error && (
         <div style={{
           marginTop: '12px', padding: '10px 12px', borderRadius: '10px',
-          background: '#fef2f2', color: '#dc2626', fontSize: '12px',
-          border: '1px solid #fecaca',
+          background: 'var(--danger-soft)', color: 'var(--danger)', fontSize: '12px',
+          border: '1px solid var(--danger-border)',
         }}>
           {error}
         </div>
@@ -76,7 +77,7 @@ export default function SetupForm({ userId }: { userId: string }) {
 
       <button type="submit" disabled={loading} style={{
         marginTop: '20px', width: '100%', padding: '12px',
-        borderRadius: '12px', background: '#111827', color: '#fff',
+        borderRadius: '12px', background: 'var(--text)', color: 'var(--bg)',
         border: 'none', fontSize: '14px', fontWeight: 500,
         cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1,
         fontFamily: 'inherit',
@@ -89,10 +90,10 @@ export default function SetupForm({ userId }: { userId: string }) {
 
 const labelStyle: React.CSSProperties = {
   display: 'block', fontSize: '11px', textTransform: 'uppercase',
-  letterSpacing: '0.5px', color: '#9ca3af', marginBottom: '6px', fontWeight: 600,
+  letterSpacing: '0.5px', color: 'var(--text-light)', marginBottom: '6px', fontWeight: 600,
 }
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', fontSize: '14px',
-  background: '#f9fafb', border: '1px solid #f3f4f6',
+  background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)',
   borderRadius: '10px', outline: 'none', fontFamily: 'inherit',
 }

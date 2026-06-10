@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin-client'
 import DeleteButton from '@/components/admin/DeleteButton'
+import PublishToggle from '@/components/admin/PublishToggle'
 import type { CrosswordRow } from '@/lib/supabase/types'
 
 export const dynamic = 'force-dynamic'
@@ -65,6 +66,7 @@ export default async function AdminListPage() {
                   {!r.published && <span style={{ marginLeft: '8px', color: '#f59e0b' }}>· черновик</span>}
                 </div>
               </div>
+              <PublishToggle id={r.id} published={r.published} />
               <Link href={`/admin/edit/${r.id}`} style={{
                 padding: '6px 12px', background: '#f3f4f6',
                 borderRadius: '8px', fontSize: '12px', color: '#374151',

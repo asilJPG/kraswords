@@ -92,7 +92,7 @@ export default function ResultSheet({
             fontSize: '26px',
             fontWeight: 800,
             letterSpacing: '-0.5px',
-            color: '#16a34a',
+            color: 'var(--accent)',
             marginTop: '12px',
             opacity: stage >= 1 ? 1 : 0,
             transform: stage >= 1 ? 'translateY(0)' : 'translateY(10px)',
@@ -102,7 +102,7 @@ export default function ResultSheet({
           </h2>
           <p style={{
             fontSize: '13px',
-            color: '#9ca3af',
+            color: 'var(--text-light)',
             marginTop: '4px',
             opacity: stage >= 1 ? 1 : 0,
             transition: 'opacity 0.4s ease-out 0.1s',
@@ -139,7 +139,7 @@ export default function ResultSheet({
             <div style={{
               fontSize: '11px',
               fontWeight: 700,
-              color: '#9ca3af',
+              color: 'var(--text-light)',
               textTransform: 'uppercase',
               letterSpacing: '1.2px',
               marginBottom: '10px',
@@ -194,8 +194,8 @@ export default function ResultSheet({
             style={{
               flex: 1,
               padding: '14px',
-              background: '#f3f4f6',
-              color: '#374151',
+              background: 'var(--surface-2)',
+              color: 'var(--text-secondary)',
               border: 'none',
               borderRadius: '14px',
               fontSize: '14px',
@@ -236,8 +236,8 @@ function StatCard({ label, value, accent }: { label: string; value: string; acce
   return (
     <div style={{
       flex: 1,
-      background: '#fff',
-      border: `2px solid ${accent}20`,
+      background: 'var(--surface)',
+      border: `2px solid ${accent}33`,
       borderRadius: '16px',
       padding: '14px 12px',
       textAlign: 'center',
@@ -253,7 +253,7 @@ function StatCard({ label, value, accent }: { label: string; value: string; acce
       </div>
       <div style={{
         fontSize: '10px',
-        color: '#9ca3af',
+        color: 'var(--text-light)',
         textTransform: 'uppercase',
         letterSpacing: '1.2px',
         marginTop: '4px',

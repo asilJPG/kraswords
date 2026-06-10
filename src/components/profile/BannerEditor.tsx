@@ -3,8 +3,8 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-const CANVAS_W = 600
-const CANVAS_H = 200
+const CANVAS_W = 1600
+const CANVAS_H = 540
 const MAX_FILE_SIZE = 500_000 // 500 KB
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
@@ -37,7 +37,10 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')!
-    ctx.fillStyle = '#ffffff'
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
+    // Slightly off-white so canvas edges are visible against any dialog bg
+    ctx.fillStyle = '#f5f5f5'
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
   }, [])
 
@@ -45,6 +48,8 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')!
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
     if (currentBannerUrl) {
       const img = new Image()
       img.crossOrigin = 'anonymous'
@@ -124,7 +129,7 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
     ctx.moveTo(lastPos.current.x, lastPos.current.y)
     ctx.lineTo(pos.x, pos.y)
     ctx.strokeStyle = tool === 'eraser' ? '#00000000' : color
-    ctx.lineWidth = tool === 'eraser' ? size * 4 : size
+    ctx.lineWidth = tool === 'eraser' ? size * 12 : size * 3
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
     if (tool === 'eraser') {
@@ -152,8 +157,13 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
     setError(null)
     canvas.toBlob(async (blob) => {
       if (!blob) { setSaving(false); setError('Ошибка сохранения'); return }
+      if (blob.size > MAX_FILE_SIZE) {
+        setError('Картинка слишком тяжёлая. Упрости рисунок и попробуй снова.')
+        setSaving(false)
+        return
+      }
       const formData = new FormData()
-      formData.append('file', blob, 'banner.png')
+      formData.append('file', blob, 'banner.jpg')
       try {
         const res = await fetch('/api/upload-banner', {
           method: 'POST',
@@ -177,7 +187,7 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
         setError('Ошибка сохранения')
         setSaving(false)
       }
-    }, 'image/png')
+    }, 'image/jpeg', 0.9)
   }
 
   return (
@@ -189,8 +199,11 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div style={{
-        background: '#fff', borderRadius: '20px', padding: '24px',
-        width: '100%', maxWidth: '660px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+        background: 'var(--bg)', color: 'var(--text)',
+        borderRadius: '20px', padding: '24px',
+        width: '100%', maxWidth: '660px',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+        border: '1px solid var(--border)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 700 }}>редактор шапки</h2>
@@ -202,7 +215,15 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
           ref={canvasRef}
           width={CANVAS_W}
           height={CANVAS_H}
-          style={{ width: '100%', borderRadius: '12px', cursor: tool === 'eraser' ? 'cell' : 'crosshair', touchAction: 'none', display: 'block' }}
+          style={{
+            width: '100%',
+            borderRadius: '12px',
+            border: '1px solid var(--border)',
+            background: 'var(--canvas-bg)',
+            cursor: tool === 'eraser' ? 'cell' : 'crosshair',
+            touchAction: 'none',
+            display: 'block',
+          }}
           onMouseDown={startDraw}
           onMouseMove={draw}
           onMouseUp={stopDraw}
@@ -216,18 +237,12 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
           {/* Tools row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             {/* Clear */}
-            <button onClick={clearCanvas} style={{
-              padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontFamily: 'inherit',
-              border: 'none', cursor: 'pointer', background: '#f3f4f6', color: '#374151',
-            }}>
+            <button onClick={clearCanvas} style={toolBtn}>
               🗑 очистить
             </button>
 
             {/* Photo upload */}
-            <button onClick={() => fileInputRef.current?.click()} style={{
-              padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontFamily: 'inherit',
-              border: 'none', cursor: 'pointer', background: '#f3f4f6', color: '#374151',
-            }}>
+            <button onClick={() => fileInputRef.current?.click()} style={toolBtn}>
               📷 фото
             </button>
             <input
@@ -238,7 +253,7 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
               style={{ display: 'none' }}
             />
             {error && <span style={{
-              fontSize: '12px', color: '#ef4444', fontWeight: 500
+              fontSize: '12px', color: 'var(--danger)', fontWeight: 500,
             }}>{error}</span>}
 
             {/* Tool toggle */}
@@ -247,8 +262,8 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
                 <button key={t} onClick={() => setTool(t)} style={{
                   padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontFamily: 'inherit',
                   border: 'none', cursor: 'pointer',
-                  background: tool === t ? '#111827' : '#f3f4f6',
-                  color: tool === t ? '#fff' : '#374151',
+                  background: tool === t ? 'var(--text)' : 'var(--surface-2)',
+                  color: tool === t ? 'var(--bg)' : 'var(--text-secondary)',
                   fontWeight: tool === t ? 600 : 400,
                 }}>
                   {t === 'pen' ? '✏️ кисть' : '⬜ ластик'}
@@ -258,16 +273,16 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
 
             {/* Size */}
             <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: '#9ca3af' }}>размер</span>
+              <span style={{ fontSize: '11px', color: 'var(--text-light)' }}>размер</span>
               {[2, 4, 8, 16].map(s => (
                 <button key={s} onClick={() => setSize(s)} style={{
                   width: '28px', height: '28px', borderRadius: '50%', border: 'none',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: size === s ? '#111827' : '#f3f4f6',
+                  background: size === s ? 'var(--text)' : 'var(--surface-2)',
                 }}>
                   <div style={{
                     width: s * 1.5, height: s * 1.5, borderRadius: '50%',
-                    background: size === s ? '#fff' : '#374151',
+                    background: size === s ? 'var(--bg)' : 'var(--text-secondary)',
                   }} />
                 </button>
               ))}
@@ -282,7 +297,8 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
                 onClick={() => { setColor(c); setTool('pen') }}
                 style={{
                   width: '26px', height: '26px', borderRadius: '50%',
-                  background: c, border: color === c ? '3px solid #111827' : '2px solid #e5e7eb',
+                  background: c,
+                  border: color === c ? '3px solid var(--text)' : '2px solid var(--border)',
                   cursor: 'pointer',
                 }}
               />
@@ -303,7 +319,7 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
               disabled={saving}
               style={{
                 flex: 1, padding: '10px', borderRadius: '10px',
-                background: '#111827', color: '#fff', border: 'none',
+                background: 'var(--text)', color: 'var(--bg)', border: 'none',
                 fontSize: '14px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer',
                 opacity: saving ? 0.6 : 1, fontFamily: 'inherit',
               }}
@@ -318,6 +334,12 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
 }
 
 const iconBtn: React.CSSProperties = {
-  background: '#f3f4f6', border: 'none', borderRadius: '8px',
+  background: 'var(--surface-2)', color: 'var(--text)', border: 'none', borderRadius: '8px',
   padding: '6px 10px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit',
+}
+
+const toolBtn: React.CSSProperties = {
+  padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontFamily: 'inherit',
+  border: 'none', cursor: 'pointer',
+  background: 'var(--surface-2)', color: 'var(--text-secondary)',
 }

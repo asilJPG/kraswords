@@ -29,10 +29,6 @@ export default function MetaForm({ meta, onChange }: Props) {
         <input value={meta.emoji} onChange={e => set('emoji', e.target.value)} style={{ ...inp, width: '60px' }} />
       </Field>
 
-      <Field label="автор">
-        <input value={meta.author} onChange={e => set('author', e.target.value)} style={inp} />
-      </Field>
-
       <Field label="категория">
         <input value={meta.category} onChange={e => set('category', e.target.value)} style={inp} placeholder="Рик и Морти" />
       </Field>

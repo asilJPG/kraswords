@@ -14,7 +14,7 @@ export default async function Home() {
     return (
       <main style={{ maxWidth: '960px', margin: '0 auto', padding: '60px 16px', textAlign: 'center' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>пока пусто</h1>
-        <p style={{ color: '#9ca3af', fontSize: '14px' }}>
+        <p style={{ color: 'var(--text-light)', fontSize: '14px' }}>
           скоро появятся первые кроссворды
         </p>
       </main>
@@ -32,7 +32,7 @@ export default async function Home() {
         }}>
           кроссворды
         </h1>
-        <p style={{ color: '#9ca3af', fontSize: '14px' }}>
+        <p style={{ color: 'var(--text-light)', fontSize: '14px' }}>
           тематические. каждый — с уникальным визуалом. выбирай и решай.
         </p>
       </div>
@@ -91,7 +91,7 @@ export default async function Home() {
               color: featured.theme.mutedColor,
               marginBottom: '16px',
             }}>
-              {featured.category} · {featured.author} · {featured.wordCount} слов
+              {featured.category} · {featured.wordCount} слов
             </p>
             <div style={{
               display: 'inline-flex',
@@ -116,7 +116,7 @@ export default async function Home() {
           fontSize: '16px',
           fontWeight: 600,
           marginBottom: '14px',
-          color: '#6b7280',
+          color: 'var(--text-secondary)',
         }}>
           популярные
         </h2>
@@ -132,8 +132,8 @@ export default async function Home() {
                 minWidth: '160px',
                 padding: '14px 16px',
                 borderRadius: '12px',
-                background: '#f9fafb',
-                border: '1px solid #f3f4f6',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
                 cursor: 'pointer',
                 transition: 'transform 0.15s ease',
               }}>
@@ -141,7 +141,7 @@ export default async function Home() {
                   <span style={{ fontSize: '18px' }}>{cw.emoji}</span>
                   <span style={{ fontSize: '14px', fontWeight: 600 }}>{cw.title}</span>
                 </div>
-                <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-light)' }}>
                   {cw.solvers.toLocaleString('ru')} решили
                 </div>
               </div>

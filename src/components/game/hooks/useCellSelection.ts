@@ -30,7 +30,7 @@ export function useCellSelection(crossword: CrosswordData, cells: Cell[][], hidd
   const selectCell = useCallback((row: number, col: number) => {
     if (cells[row][col].isBlack) return
     if (!running) setRunning(true)
-    setTimeout(() => hiddenInputRef.current?.focus(), 0)
+    hiddenInputRef.current?.focus({ preventScroll: true })
 
     const prev = selectedRef.current
     const curDir = directionRef.current
@@ -81,7 +81,7 @@ export function useCellSelection(crossword: CrosswordData, cells: Cell[][], hidd
     setActiveClue(getClueKey(clue))
     setSelectedSync({ row: clue.row, col: clue.col })
     if (!running) setRunning(true)
-    setTimeout(() => hiddenInputRef.current?.focus(), 0)
+    hiddenInputRef.current?.focus({ preventScroll: true })
   }, [running, hiddenInputRef, setDirectionSync, setSelectedSync])
 
   const reset = useCallback(() => {

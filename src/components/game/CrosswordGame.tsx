@@ -127,7 +127,7 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
           marginBottom: '24px',
         }}>
           <p style={{ fontSize: '13px', color: theme.mutedColor }}>
-            {crossword.category} · {crossword.author} · {crossword.wordCount} слов
+            {crossword.category} · {crossword.wordCount} слов
           </p>
           <span style={{ fontSize: '11px', color: theme.mutedColor }}>
             {inp.solved ? 'решён' : sel.running ? 'идёт...' : 'нажми на клетку'}

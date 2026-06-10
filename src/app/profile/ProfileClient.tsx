@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { getHistory, getTotalSolved, getAverageTime, ACHIEVEMENTS, GameRecord } from '@/lib/gameHistory'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
@@ -24,6 +26,8 @@ interface Props {
 }
 
 export default function ProfileClient({ userId, userEmail, dbHistory, username, bannerUrl: initialBannerUrl }: Props) {
+  const router = useRouter()
+  const [signingOut, setSigningOut] = useState(false)
   const [localHistory, setLocalHistory] = useState<GameRecord[]>([])
   const [totalSolved, setTotalSolved] = useState(0)
   const [avgTime, setAvgTime] = useState<number | null>(null)
@@ -89,7 +93,7 @@ export default function ProfileClient({ userId, userEmail, dbHistory, username, 
           height: '140px',
           borderRadius: '20px',
           overflow: 'hidden',
-          background: bannerUrl ? undefined : '#f3f4f6',
+          background: bannerUrl ? undefined : 'var(--banner-fallback)',
           position: 'relative',
         }}>
           {bannerUrl && (
@@ -107,8 +111,9 @@ export default function ProfileClient({ userId, userEmail, dbHistory, username, 
               style={{
                 position: 'absolute', top: '12px', right: '12px',
                 width: '36px', height: '36px', borderRadius: '50%',
-                background: 'rgba(17,24,39,0.06)', backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(17,24,39,0.08)',
+                background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(0,0,0,0.08)',
+                color: '#111',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '16px',
                 cursor: 'pointer', fontFamily: 'inherit',
@@ -124,9 +129,9 @@ export default function ProfileClient({ userId, userEmail, dbHistory, username, 
           position: 'absolute', left: '50%', bottom: '-36px',
           transform: 'translateX(-50%)',
           width: '76px', height: '76px', borderRadius: '50%',
-          background: '#f9fafb', border: '4px solid #fff',
+          background: 'var(--surface)', border: '4px solid var(--bg)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          fontSize: '32px', boxShadow: 'var(--shadow-card)',
         }}>
           😎
         </div>
@@ -137,7 +142,7 @@ export default function ProfileClient({ userId, userEmail, dbHistory, username, 
         <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '2px' }}>
           {username ?? userEmail?.split('@')[0] ?? 'игрок'}
         </h1>
-        <p style={{ fontSize: '12px', color: '#9ca3af' }}>
+        <p style={{ fontSize: '12px', color: 'var(--text-light)' }}>
           {userEmail ?? 'гость'}
         </p>
       </div>
@@ -149,9 +154,9 @@ export default function ProfileClient({ userId, userEmail, dbHistory, username, 
           { label: 'среднее', value: displayAvg ? formatTime(displayAvg) : '—' },
           { label: 'серия', value: String(streak) },
         ].map(stat => (
-          <div key={stat.label} style={{ background: '#f9fafb', borderRadius: '14px', padding: '18px 12px', textAlign: 'center' }}>
+          <div key={stat.label} style={{ background: 'var(--surface)', borderRadius: '14px', padding: '18px 12px', textAlign: 'center' }}>
             <div style={{ fontSize: '22px', fontWeight: 700, marginBottom: '4px' }}>{stat.value}</div>
-            <div style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{stat.label}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{stat.label}</div>
           </div>
         ))}
       </div>
@@ -169,17 +174,17 @@ export default function ProfileClient({ userId, userEmail, dbHistory, username, 
           const unlocked = progress >= a.maxProgress
           return (
             <div key={a.id} style={{
-              background: unlocked ? '#fff' : '#f9fafb',
-              border: '1px solid #f3f4f6',
+              background: unlocked ? 'var(--bg)' : 'var(--surface)',
+              border: '1px solid var(--border)',
               borderRadius: '12px',
               padding: '14px',
               opacity: unlocked ? 1 : 0.5,
             }}>
               <div style={{ fontSize: '24px', marginBottom: '6px' }}>{a.icon}</div>
               <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '2px' }}>{a.title}</div>
-              <div style={{ fontSize: '11px', color: '#9ca3af' }}>{a.description}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>{a.description}</div>
               {a.maxProgress > 1 && (
-                <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '6px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '6px' }}>
                   {Math.min(progress, a.maxProgress)}/{a.maxProgress}
                 </div>
               )}
@@ -191,24 +196,24 @@ export default function ProfileClient({ userId, userEmail, dbHistory, username, 
       {/* History */}
       <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '14px' }}>история игр</h2>
       {history.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px 20px', color: '#d1d5db', fontSize: '14px', background: '#f9fafb', borderRadius: '14px' }}>
+        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-light)', fontSize: '14px', background: 'var(--surface)', borderRadius: '14px' }}>
           ещё не решал кроссвордов
         </div>
       ) : (
-        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #f3f4f6', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
           {history.map((record, i) => (
             <Link key={i} href={`/play/${record.id}`}>
               <div style={{
                 display: 'flex', alignItems: 'center', padding: '14px 16px', gap: '12px',
-                borderBottom: i < history.length - 1 ? '1px solid #f9fafb' : 'none', cursor: 'pointer',
+                borderBottom: i < history.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer',
               }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '14px', fontWeight: 500 }}>{record.id}</div>
-                  <div style={{ fontSize: '11px', color: '#9ca3af' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>
                     {new Date(record.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
                   </div>
                 </div>
-                <div style={{ fontSize: '14px', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: record.solved ? '#22c55e' : '#9ca3af' }}>
+                <div style={{ fontSize: '14px', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: record.solved ? 'var(--accent)' : 'var(--text-light)' }}>
                   {record.solved ? formatTime(record.time) : 'не решён'}
                 </div>
               </div>
@@ -218,14 +223,44 @@ export default function ProfileClient({ userId, userEmail, dbHistory, username, 
       )}
 
       {!userEmail && (
-        <div style={{ marginTop: '24px', padding: '16px', background: '#f9fafb', borderRadius: '14px', textAlign: 'center' }}>
-          <p style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '10px' }}>
+        <div style={{ marginTop: '24px', padding: '16px', background: 'var(--surface)', borderRadius: '14px', textAlign: 'center' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-light)', marginBottom: '10px' }}>
             Войди, чтобы история сохранялась на всех устройствах
           </p>
-          <Link href="/login" style={{ fontSize: '13px', fontWeight: 500, color: '#111827', textDecoration: 'underline' }}>
+          <Link href="/login" style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text)', textDecoration: 'underline' }}>
             войти или зарегистрироваться
           </Link>
         </div>
+      )}
+
+      {userEmail && (
+        <button
+          onClick={async () => {
+            setSigningOut(true)
+            const supabase = createClient()
+            await supabase.auth.signOut()
+            router.push('/')
+            router.refresh()
+          }}
+          disabled={signingOut}
+          style={{
+            marginTop: '24px',
+            width: '100%',
+            padding: '14px',
+            background: 'transparent',
+            border: '1px solid var(--danger-border)',
+            borderRadius: '14px',
+            fontSize: '14px',
+            fontWeight: 500,
+            color: 'var(--danger)',
+            cursor: signingOut ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+            opacity: signingOut ? 0.6 : 1,
+            minHeight: '48px',
+          }}
+        >
+          {signingOut ? 'выходим...' : 'выйти из аккаунта'}
+        </button>
       )}
 
       {editorOpen && userId && (

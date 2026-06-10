@@ -189,7 +189,7 @@ function CrosswordCard({ cw }: { cw: CrosswordData }) {
             position: 'relative',
             zIndex: 1,
           }}>
-            {cw.category} · {cw.author}
+            {cw.category}
           </p>
 
           <div style={{

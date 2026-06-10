@@ -46,59 +46,59 @@ export default async function TopPage() {
       </h1>
 
       {/* Player leaderboard */}
-      <h2 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>
+      <h2 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: 'var(--text-secondary)' }}>
         игроки
       </h2>
-      <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #f3f4f6', overflow: 'hidden', marginBottom: '36px' }}>
+      <div style={{ background: 'var(--bg)', borderRadius: '16px', border: '1px solid var(--border)', overflow: 'hidden', marginBottom: '36px' }}>
         {leaderboard.length === 0 ? (
-          <div style={{ padding: '32px 20px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>
+          <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--text-light)', fontSize: '14px' }}>
             пока никто не решал
           </div>
         ) : leaderboard.map((p, i) => (
           <div key={p.username} style={{
             display: 'flex', alignItems: 'center', padding: '14px 20px',
-            borderBottom: i < leaderboard.length - 1 ? '1px solid #f9fafb' : 'none',
+            borderBottom: i < leaderboard.length - 1 ? '1px solid var(--border)' : 'none',
             gap: '12px',
           }}>
-            <span style={{ width: '24px', fontSize: i < 3 ? '16px' : '13px', fontWeight: 700, color: i < 3 ? '#111827' : '#d1d5db', textAlign: 'center' }}>
+            <span style={{ width: '24px', fontSize: i < 3 ? '16px' : '13px', fontWeight: 700, color: i < 3 ? 'var(--text)' : 'var(--text-light)', textAlign: 'center' }}>
               {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
             </span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '14px', fontWeight: 600 }}>{p.username}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '14px', fontWeight: 600 }}>{p.total} <span style={{ fontWeight: 400, color: '#9ca3af', fontSize: '12px' }}>реш.</span></div>
-              <div style={{ fontSize: '11px', color: '#9ca3af' }}>ср. {fmt(p.avg)}</div>
+              <div style={{ fontSize: '14px', fontWeight: 600 }}>{p.total} <span style={{ fontWeight: 400, color: 'var(--text-light)', fontSize: '12px' }}>реш.</span></div>
+              <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>ср. {fmt(p.avg)}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Crossword top */}
-      <h2 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>
+      <h2 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: 'var(--text-secondary)' }}>
         кроссворды
       </h2>
-      <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #f3f4f6', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--bg)', borderRadius: '16px', border: '1px solid var(--border)', overflow: 'hidden' }}>
         {sorted.length === 0 ? (
-          <div style={{ padding: '32px 20px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>пока нет кроссвордов</div>
+          <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--text-light)', fontSize: '14px' }}>пока нет кроссвордов</div>
         ) : sorted.map((cw, i) => (
           <Link key={cw.id} href={`/play/${cw.id}`}>
             <div style={{
               display: 'flex', alignItems: 'center', padding: '14px 20px',
-              borderBottom: i < sorted.length - 1 ? '1px solid #f9fafb' : 'none',
+              borderBottom: i < sorted.length - 1 ? '1px solid var(--border)' : 'none',
               gap: '12px', cursor: 'pointer',
             }}>
-              <span style={{ width: '24px', fontSize: i < 3 ? '16px' : '13px', fontWeight: 700, color: i < 3 ? '#111827' : '#d1d5db', textAlign: 'center' }}>
+              <span style={{ width: '24px', fontSize: i < 3 ? '16px' : '13px', fontWeight: 700, color: i < 3 ? 'var(--text)' : 'var(--text-light)', textAlign: 'center' }}>
                 {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
               </span>
               <span style={{ fontSize: '20px' }}>{cw.emoji}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '14px', fontWeight: 500 }}>{cw.title}</div>
-                <div style={{ fontSize: '11px', color: '#9ca3af' }}>{cw.category}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>{cw.category}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '14px', fontWeight: 600 }}>{cw.solvers.toLocaleString('ru')}</div>
-                <div style={{ fontSize: '11px', color: '#9ca3af' }}>решили</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>решили</div>
               </div>
             </div>
           </Link>
