@@ -8,6 +8,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
 const BannerEditor = dynamic(() => import('@/components/profile/BannerEditor'), { ssr: false })
+const AvatarPicker = dynamic(() => import('@/components/profile/AvatarPicker'), { ssr: false })
 
 function formatTime(s: number) {
   const m = Math.floor(s / 60)
@@ -23,15 +24,18 @@ interface Props {
   dbHistory: DbRecord[]
   username: string | null
   bannerUrl: string | null
+  avatarEmoji: string
 }
 
-export default function ProfileClient({ userId, userEmail, dbHistory, username, bannerUrl: initialBannerUrl }: Props) {
+export default function ProfileClient({ userId, userEmail, dbHistory, username, bannerUrl: initialBannerUrl, avatarEmoji: initialAvatarEmoji }: Props) {
   const router = useRouter()
   const [signingOut, setSigningOut] = useState(false)
   const [localHistory, setLocalHistory] = useState<GameRecord[]>([])
   const [totalSolved, setTotalSolved] = useState(0)
   const [avgTime, setAvgTime] = useState<number | null>(null)
   const [editorOpen, setEditorOpen] = useState(false)
+  const [avatarOpen, setAvatarOpen] = useState(false)
+  const [avatarEmoji, setAvatarEmoji] = useState(initialAvatarEmoji)
   const [bannerUrl, setBannerUrl] = useState(initialBannerUrl)
 
   useEffect(() => {
@@ -125,16 +129,23 @@ export default function ProfileClient({ userId, userEmail, dbHistory, username, 
         </div>
 
         {/* Avatar overlapping banner */}
-        <div style={{
-          position: 'absolute', left: '50%', bottom: '-36px',
-          transform: 'translateX(-50%)',
-          width: '76px', height: '76px', borderRadius: '50%',
-          background: 'var(--surface)', border: '4px solid var(--bg)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '32px', boxShadow: 'var(--shadow-card)',
-        }}>
-          😎
-        </div>
+        <button
+          onClick={() => { if (userId) setAvatarOpen(true) }}
+          disabled={!userId}
+          style={{
+            position: 'absolute', left: '50%', bottom: '-36px',
+            transform: 'translateX(-50%)',
+            width: '76px', height: '76px', borderRadius: '50%',
+            background: 'var(--surface)', border: '4px solid var(--bg)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '32px', boxShadow: 'var(--shadow-card)',
+            cursor: userId ? 'pointer' : 'default',
+            fontFamily: 'inherit', padding: 0,
+          }}
+          title={userId ? 'сменить аватар' : ''}
+        >
+          {avatarEmoji}
+        </button>
       </div>
 
       {/* Username + handle */}
@@ -269,6 +280,25 @@ export default function ProfileClient({ userId, userEmail, dbHistory, username, 
           currentBannerUrl={bannerUrl}
           onSaved={url => setBannerUrl(url)}
           onClose={() => setEditorOpen(false)}
+        />
+      )}
+
+      {avatarOpen && userId && (
+        <AvatarPicker
+          current={avatarEmoji}
+          onSave={async (emoji) => {
+            const res = await fetch('/api/update-profile', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ avatar: { type: 'emoji', value: emoji } }),
+            })
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}))
+              throw new Error(data.error ?? 'Ошибка сохранения')
+            }
+            setAvatarEmoji(emoji)
+          }}
+          onClose={() => setAvatarOpen(false)}
         />
       )}
     </main>
