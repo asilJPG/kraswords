@@ -1,7 +1,7 @@
 import type { ThemeConfig } from '@/lib/crossword/types'
 
 export default function Particles({ theme }: { theme: ThemeConfig }) {
-  if (!theme.particleColor) return null
+  if (!theme.particleColor && theme.effect !== 'particles') return null
   const particles = Array(30).fill(0).map(() => ({
     left: Math.random() * 100,
     top: Math.random() * 100,
@@ -21,7 +21,7 @@ export default function Particles({ theme }: { theme: ThemeConfig }) {
           width: `${p.size}px`,
           height: `${p.size}px`,
           borderRadius: '50%',
-          background: theme.particleColor,
+          background: theme.particleColor || theme.accentColor || '#fff',
           opacity: p.opacity,
           animation: `twinkle ${p.duration}s ${p.delay}s infinite ease-in-out`,
         }} />

@@ -7,6 +7,9 @@ import { analyzeConnectivity, buildClues, type EditorWord } from '@/lib/crosswor
 import { saveCrossword } from '@/lib/crossword/api'
 import { useEditorState, type CrosswordMeta } from './hooks/useEditorState'
 import { useAutosave } from './hooks/useAutosave'
+import { themes } from '@/lib/crosswords'
+import type { CrosswordData } from '@/lib/crossword/types'
+import CrosswordGame from '@/components/game/CrosswordGame'
 
 import MetaForm from './MetaForm'
 import AddWordForm from './AddWordForm'
@@ -28,9 +31,34 @@ export default function CrosswordEditor({ draftId, initialMeta, initialWords }: 
   const [pendingDir, setPendingDir] = useState<Direction>('across')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [isPreview, setIsPreview] = useState(false)
 
   const pendingWord = pendingId ? s.words.find(w => w.id === pendingId) ?? null : null
   const conn = useMemo(() => analyzeConnectivity(s.words), [s.words])
+
+  const previewCrossword = useMemo<CrosswordData | null>(() => {
+    if (!isPreview) return null
+    const clues = buildClues(s.words)
+    const baseTheme = themes[s.meta.theme_id] ?? themes.default
+    const theme = s.meta.theme_custom
+      ? { ...baseTheme, ...s.meta.theme_custom }
+      : baseTheme
+
+    return {
+      id: s.meta.id || 'preview',
+      title: s.meta.title || 'Предпросмотр кроссворда',
+      author: s.meta.author || 'аноним',
+      date: new Date().toISOString().slice(0, 10),
+      difficulty: s.meta.difficulty,
+      emoji: s.meta.emoji,
+      size: s.meta.size,
+      clues,
+      solvers: 0,
+      theme,
+      wordCount: clues.length,
+      category: s.meta.category,
+    }
+  }, [isPreview, s.meta, s.words])
 
   const startPlacement = (id: string) => {
     setPendingId(id)
@@ -81,6 +109,7 @@ export default function CrosswordEditor({ draftId, initialMeta, initialWords }: 
         category: s.meta.category,
         difficulty: s.meta.difficulty,
         theme_id: s.meta.theme_id,
+        theme_custom: s.meta.theme_custom,
         size: s.meta.size,
         clues,
         word_count: clues.length,
@@ -158,21 +187,41 @@ export default function CrosswordEditor({ draftId, initialMeta, initialWords }: 
           }}>{saveError}</div>
         )}
 
-        <button onClick={handleSave} disabled={saving} style={{
-          marginTop: '12px',
-          padding: '10px 16px',
-          background: '#111827',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '10px',
-          fontSize: '13px',
-          fontWeight: 500,
-          cursor: saving ? 'not-allowed' : 'pointer',
-          opacity: saving ? 0.6 : 1,
-          fontFamily: 'inherit',
-        }}>
-          {saving ? 'сохраняем...' : 'сохранить в supabase'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+          <button onClick={handleSave} disabled={saving} style={{
+            padding: '10px 16px',
+            background: '#111827',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '10px',
+            fontSize: '13px',
+            fontWeight: 500,
+            cursor: saving ? 'not-allowed' : 'pointer',
+            opacity: saving ? 0.6 : 1,
+            fontFamily: 'inherit',
+            flex: 1,
+          }}>
+            {saving ? 'сохраняем...' : 'сохранить в supabase'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsPreview(true)}
+            style={{
+              padding: '10px 16px',
+              background: '#f3f4f6',
+              color: '#1f2937',
+              border: '1px solid #d1d5db',
+              borderRadius: '10px',
+              fontSize: '13px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Предпросмотр темы
+          </button>
+        </div>
       </section>
 
       {/* RIGHT: words */}
@@ -196,6 +245,32 @@ export default function CrosswordEditor({ draftId, initialMeta, initialWords }: 
           />
         </div>
       </aside>
+      {isPreview && previewCrossword && (
+        <>
+          <button
+            onClick={() => setIsPreview(false)}
+            style={{
+              position: 'fixed',
+              top: '16px',
+              left: '16px',
+              zIndex: 300,
+              background: '#ef4444',
+              color: '#fff',
+              border: 'none',
+              padding: '10px 18px',
+              borderRadius: '10px',
+              fontWeight: 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)',
+              transition: 'transform 0.2s',
+            }}
+          >
+            ← Выйти из предпросмотра
+          </button>
+          <CrosswordGame crossword={previewCrossword} />
+        </>
+      )}
     </div>
   )
 }

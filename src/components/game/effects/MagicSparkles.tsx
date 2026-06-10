@@ -1,7 +1,7 @@
 import type { ThemeConfig } from '@/lib/crossword/types'
 
 export default function MagicSparkles({ theme }: { theme: ThemeConfig }) {
-  if (theme.id !== 'harrypotter') return null
+  if (theme.id !== 'harrypotter' && theme.effect !== 'magic-sparkles') return null
   const sparkles = Array(18).fill(0).map(() => ({
     left: Math.random() * 100,
     top: Math.random() * 100,

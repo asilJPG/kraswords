@@ -2,7 +2,7 @@
 
 Файл обновляется при каждом `git push`. Если открыл на другом компе — читай этот файл первым после `git pull`.
 
-Last update: 2026-06-10 (Fix: /api/game-result & /api/check fetch crosswords from DB instead of hardcoded list)
+Last update: 2026-06-10 (Feature: Custom styling builder via theme_custom + Live Preview in admin editor)
 
 ---
 
@@ -95,6 +95,8 @@ update profiles set role = 'admin' where username = '<твой_ник>';
 - ✅ Duolingo-style ResultSheet с конфетти и поэтапной анимацией
 - ✅ Mobile keyboard fix (iOS Safari): HiddenInput в видимой области + sync focus
 - ✅ HSTS, password ≥8, generic 401 на резолв-логин
+- ✅ Кастомизация оформления (цвета, шрифты, эффекты) через БД (`theme_custom`)
+- ✅ Интерактивный полноэкранный предпросмотр (Preview) в панели администратора без сохранения в БД
 
 ## Известные мелочи / pending
 

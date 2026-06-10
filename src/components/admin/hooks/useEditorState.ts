@@ -10,6 +10,7 @@ export interface CrosswordMeta {
   category: string
   difficulty: 'лёгкий' | 'средний' | 'сложный'
   theme_id: string
+  theme_custom?: Record<string, any> | null
   size: number
   published: boolean
 }
@@ -22,6 +23,7 @@ const defaultMeta: CrosswordMeta = {
   category: 'разное',
   difficulty: 'средний',
   theme_id: 'default',
+  theme_custom: null,
   size: 13,
   published: false,
 }

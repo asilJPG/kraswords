@@ -8,6 +8,7 @@ export interface CrosswordRow {
   category: string
   difficulty: 'лёгкий' | 'средний' | 'сложный'
   theme_id: string
+  theme_custom?: Record<string, any> | null
   size: number
   clues: Clue[]
   word_count: number

@@ -31,6 +31,7 @@ export interface ThemeConfig {
   fontFamily?: string
   particleColor?: string
   glowColor?: string
+  effect?: string
 }
 
 export interface CrosswordData {

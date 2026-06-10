@@ -13,7 +13,10 @@ export function rowToCrosswordData(row: CrosswordRow): CrosswordData {
     size: row.size,
     clues: row.clues,
     solvers: row.solvers,
-    theme: themes[row.theme_id] ?? themes.default,
+    theme: {
+      ...(themes[row.theme_id] ?? themes.default),
+      ...(row.theme_custom || {}),
+    },
     wordCount: row.word_count,
     category: row.category,
   }

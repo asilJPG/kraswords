@@ -1,7 +1,7 @@
 import type { ThemeConfig } from '@/lib/crossword/types'
 
 export default function PortalDrips({ theme }: { theme: ThemeConfig }) {
-  if (theme.id !== 'rickmorty') return null
+  if (theme.id !== 'rickmorty' && theme.effect !== 'portal-drips') return null
   const drips = Array(10).fill(0).map(() => ({
     left: Math.random() * 100,
     delay: Math.random() * 10,
