@@ -2,7 +2,7 @@
 
 Файл обновляется при каждом `git push`. Если открыл на другом компе — читай этот файл первым после `git pull`.
 
-Last update: 2026-06-10 (Feature: Custom styling builder via theme_custom + Live Preview in admin editor)
+Last update: 2026-06-10 (Feature: Custom styling, Live Preview, hydration fix & middleware optimization)
 
 ---
 
