@@ -1,7 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from './types'
-import { ADMIN_COOKIE, ADMIN_TOKEN } from '@/lib/admin-auth'
 
 const PROTECTED_PREFIXES = ['/play', '/profile']
 
@@ -31,16 +30,15 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const adminCookieValue = request.cookies.get(ADMIN_COOKIE)?.value
-  const isAdmin = adminCookieValue === ADMIN_TOKEN
-
   const pathname = request.nextUrl.pathname
   const isAdminRoute = pathname.startsWith('/admin')
   const isProtectedRoute = PROTECTED_PREFIXES.some(p => pathname.startsWith(p))
   const isLoginRoute = pathname === '/login'
   const isSetupRoute = pathname === '/setup-profile'
+  const isApiRoute = pathname.startsWith('/api')
 
-  if ((isAdminRoute || isProtectedRoute) && !user && !isAdmin) {
+  // not logged in → login (except setup-profile which we handle separately)
+  if ((isAdminRoute || isProtectedRoute) && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('next', pathname)
@@ -53,27 +51,39 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (isLoginRoute && (user || isAdmin)) {
+  // Single profile lookup for both username + role
+  let profile: { username: string | null; role: string | null } | null = null
+  if (user && !isApiRoute) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase.from('profiles') as any)
+      .select('username, role')
+      .eq('id', user.id)
+      .single()
+    profile = data ?? null
+  }
+  const isAdmin = profile?.role === 'admin'
+
+  // logged in but not an admin → can't access /admin/*
+  if (isAdminRoute && user && !isAdmin) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
+    url.search = ''
+    return NextResponse.redirect(url)
+  }
+
+  if (isLoginRoute && user) {
     const url = request.nextUrl.clone()
     url.pathname = isAdmin ? '/admin' : '/'
     url.search = ''
     return NextResponse.redirect(url)
   }
 
-  // Logged-in Supabase users without a profile/username must finish setup
-  const isApiRoute = pathname.startsWith('/api')
-  if (user && !isSetupRoute && !isAdminRoute && !isApiRoute) {
-    const { data: profile } = await (supabase.from('profiles') as any)
-      .select('username')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile?.username) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/setup-profile'
-      url.search = ''
-      return NextResponse.redirect(url)
-    }
+  // logged-in Supabase users without a profile/username must finish setup
+  if (user && !isSetupRoute && !isAdminRoute && !isApiRoute && !profile?.username) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/setup-profile'
+    url.search = ''
+    return NextResponse.redirect(url)
   }
 
   return response

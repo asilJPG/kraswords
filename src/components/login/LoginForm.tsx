@@ -12,7 +12,8 @@ export default function LoginForm() {
   const next = searchParams.get('next') || '/'
 
   const [mode, setMode] = useState<Mode>('login')
-  const [login, setLogin] = useState('')
+  const [email, setEmail] = useState('')
+  const [loginField, setLoginField] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -24,23 +25,6 @@ export default function LoginForm() {
     setError(null)
     setInfo(null)
     setLoading(true)
-
-    if (login.trim().toLowerCase() === 'admin') {
-      const res = await fetch('/api/admin-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'admin', password }),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        setError(data.error ?? 'Неверный логин или пароль')
-        setLoading(false)
-        return
-      }
-      router.push('/admin')
-      router.refresh()
-      return
-    }
 
     const supabase = createClient()
 
@@ -56,8 +40,13 @@ export default function LoginForm() {
         setLoading(false)
         return
       }
+      if (password.length < 8) {
+        setError('Пароль: минимум 8 символов')
+        setLoading(false)
+        return
+      }
 
-      const { data, error } = await supabase.auth.signUp({ email: login, password })
+      const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) {
         setError(error.message)
         setLoading(false)
@@ -69,10 +58,14 @@ export default function LoginForm() {
         return
       }
       if (data.user) {
-        const { error: profileError } = await (supabase.from('profiles') as any)
-          .insert({ id: data.user.id, username: trimmedUsername })
-        if (profileError) {
-          setError(profileError.code === '23505' ? 'Такой юзернейм уже занят' : profileError.message)
+        const setupRes = await fetch('/api/setup-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: trimmedUsername }),
+        })
+        const setupData = await setupRes.json().catch(() => ({}))
+        if (!setupRes.ok || !setupData.ok) {
+          setError(setupData.error ?? 'Ошибка при создании юзернейма')
           setLoading(false)
           return
         }
@@ -82,13 +75,29 @@ export default function LoginForm() {
       return
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email: login, password })
+    // resolve email from login (email OR username)
+    const resolveRes = await fetch('/api/resolve-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login: loginField }),
+    })
+    const resolveData = await resolveRes.json().catch(() => ({}))
+    if (!resolveRes.ok || !resolveData.email) {
+      setError(resolveData.error ?? 'Неверный логин')
+      setLoading(false)
+      return
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: resolveData.email, password,
+    })
     if (error) {
       setError(error.message)
       setLoading(false)
       return
     }
     if (data.user) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: profile } = await (supabase.from('profiles') as any)
         .select('username').eq('id', data.user.id).single()
       if (!profile) {
@@ -116,16 +125,32 @@ export default function LoginForm() {
       </h1>
       <p style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '24px' }}>красвордс</p>
 
-      <label style={labelStyle}>логин</label>
-      <input
-        type="text"
-        autoComplete="username"
-        required
-        value={login}
-        onChange={e => setLogin(e.target.value)}
-        style={inputStyle}
-        placeholder="email"
-      />
+      {mode === 'login' ? (
+        <>
+          <label style={labelStyle}>email или юзернейм</label>
+          <input
+            type="text"
+            autoComplete="username"
+            required
+            value={loginField}
+            onChange={e => setLoginField(e.target.value)}
+            style={inputStyle}
+            placeholder="email или ник"
+          />
+        </>
+      ) : (
+        <>
+          <label style={labelStyle}>email</label>
+          <input
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            style={inputStyle}
+          />
+        </>
+      )}
 
       {mode === 'register' && (
         <>
@@ -151,7 +176,7 @@ export default function LoginForm() {
         type="password"
         autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
         required
-        minLength={mode === 'register' ? 6 : undefined}
+        minLength={mode === 'register' ? 8 : undefined}
         value={password}
         onChange={e => setPassword(e.target.value)}
         style={inputStyle}

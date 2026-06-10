@@ -1,6 +1,15 @@
-export const ADMIN_COOKIE = 'kw_admin'
-export const ADMIN_TOKEN = process.env.ADMIN_SESSION_TOKEN ?? 'kw-admin-dev-2025'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
-export function isAdminCookie(value: string | undefined): boolean {
-  return !!value && value === ADMIN_TOKEN
+// Checks profiles.role === 'admin' for the given user id.
+// Promote via SQL: `update profiles set role = 'admin' where id = '...';`
+export async function isUserAdmin(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase.from('profiles') as any)
+    .select('role')
+    .eq('id', userId)
+    .single()
+  return data?.role === 'admin'
 }

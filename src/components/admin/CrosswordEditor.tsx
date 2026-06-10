@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Direction } from '@/lib/crossword/types'
-import { buildClues, type EditorWord } from '@/lib/crossword/editor'
+import { analyzeConnectivity, buildClues, type EditorWord } from '@/lib/crossword/editor'
 import { saveCrossword } from '@/lib/crossword/api'
 import { useEditorState, type CrosswordMeta } from './hooks/useEditorState'
 import { useAutosave } from './hooks/useAutosave'
@@ -30,6 +30,7 @@ export default function CrosswordEditor({ draftId, initialMeta, initialWords }: 
   const [saveError, setSaveError] = useState<string | null>(null)
 
   const pendingWord = pendingId ? s.words.find(w => w.id === pendingId) ?? null : null
+  const conn = useMemo(() => analyzeConnectivity(s.words), [s.words])
 
   const startPlacement = (id: string) => {
     setPendingId(id)
@@ -59,6 +60,14 @@ export default function CrosswordEditor({ draftId, initialMeta, initialWords }: 
     }
     if (!s.meta.title) {
       setSaveError('задай название')
+      return
+    }
+    if (!conn.connected) {
+      setSaveError(`${conn.orphans.length} слов не пересекаются с основной сеткой`)
+      return
+    }
+    if (conn.intersectionCount < placed.length - 1) {
+      setSaveError('слабые пересечения — каждое слово должно пересекаться хотя бы с одним другим')
       return
     }
     const clues = buildClues(s.words)
@@ -118,8 +127,28 @@ export default function CrosswordEditor({ draftId, initialMeta, initialWords }: 
           onPlace={handlePlace}
           onCancelPending={() => setPendingId(null)}
         />
-        <div style={{ marginTop: '16px', fontSize: '12px', color: '#9ca3af' }}>
-          поставлено: <b style={{ color: '#111' }}>{s.words.filter(w => w.placed).length}</b> из {s.words.length}
+        <div style={{
+          marginTop: '16px',
+          display: 'flex', flexWrap: 'wrap', gap: '8px',
+          fontSize: '12px',
+        }}>
+          <span style={{ color: '#9ca3af' }}>
+            поставлено: <b style={{ color: '#111' }}>{conn.placedCount}</b> из {s.words.length}
+          </span>
+          <span style={{ color: '#9ca3af' }}>·</span>
+          <span style={{ color: '#9ca3af' }}>
+            пересечений: <b style={{ color: '#111' }}>{conn.intersectionCount}</b>
+          </span>
+          <span style={{ color: '#9ca3af' }}>·</span>
+          {conn.connected && conn.placedCount > 0 ? (
+            <span style={{ color: '#16a34a', fontWeight: 600 }}>✓ связано</span>
+          ) : conn.placedCount > 1 ? (
+            <span style={{ color: '#dc2626', fontWeight: 600 }}>
+              ✗ {conn.orphans.length} сирот
+            </span>
+          ) : (
+            <span style={{ color: '#9ca3af' }}>—</span>
+          )}
         </div>
 
         {saveError && (
@@ -155,6 +184,7 @@ export default function CrosswordEditor({ draftId, initialMeta, initialWords }: 
             words={s.words}
             pendingId={pendingId}
             pendingDirection={pendingDir}
+            orphans={conn.orphans}
             onStartPlacement={startPlacement}
             onSetDirection={setPendingDir}
             onUnplace={s.unplaceWord}

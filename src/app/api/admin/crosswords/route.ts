@@ -1,19 +1,22 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin-client'
-import { ADMIN_COOKIE, ADMIN_TOKEN } from '@/lib/admin-auth'
+import { isUserAdmin } from '@/lib/admin-auth'
 import type { CrosswordInsert } from '@/lib/supabase/types'
 
-async function checkAdmin() {
-  const cookieStore = await cookies()
-  return cookieStore.get(ADMIN_COOKIE)?.value === ADMIN_TOKEN
+async function requireAdmin() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+  return await isUserAdmin(supabase, user.id)
 }
 
 export async function GET() {
-  if (!await checkAdmin()) {
+  if (!(await requireAdmin())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const supabase = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('crosswords') as any)
     .select('*')
     .order('updated_at', { ascending: false })
@@ -22,11 +25,12 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  if (!await checkAdmin()) {
+  if (!(await requireAdmin())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const row = await req.json() as CrosswordInsert
   const supabase = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('crosswords') as any)
     .upsert(row, { onConflict: 'id' })
     .select()

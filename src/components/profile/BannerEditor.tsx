@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 
 const CANVAS_W = 600
 const CANVAS_H = 200
+const MAX_FILE_SIZE = 500_000 // 500 KB
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
 const COLORS = [
   '#ffffff', '#111827', '#6366f1', '#8b5cf6', '#ec4899',
@@ -27,6 +29,7 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
   const [size, setSize] = useState(4)
   const [tool, setTool] = useState<'pen' | 'eraser'>('pen')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const drawing = useRef(false)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
 
@@ -57,6 +60,18 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
+
+    // Client-side validation
+    if (file.size > MAX_FILE_SIZE) {
+      setError('Файл больше 500 KB')
+      return
+    }
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      setError('Только JPEG, PNG, WebP и GIF')
+      return
+    }
+    setError(null)
+
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')!
@@ -134,20 +149,34 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
     const canvas = canvasRef.current
     if (!canvas) return
     setSaving(true)
+    setError(null)
     canvas.toBlob(async (blob) => {
-      if (!blob) { setSaving(false); return }
-      const supabase = createClient()
-      const path = `${userId}/banner.png`
-      const { error } = await supabase.storage.from('banners').upload(path, blob, {
-        upsert: true, contentType: 'image/png',
-      })
-      if (error) { setSaving(false); alert('Ошибка сохранения: ' + error.message); return }
-      const { data: { publicUrl } } = supabase.storage.from('banners').getPublicUrl(path)
-      await (supabase.from('profiles') as any)
-        .upsert({ id: userId, banner_url: publicUrl + '?t=' + Date.now() }, { onConflict: 'id' })
-      onSaved(publicUrl + '?t=' + Date.now())
-      setSaving(false)
-      onClose()
+      if (!blob) { setSaving(false); setError('Ошибка сохранения'); return }
+      const formData = new FormData()
+      formData.append('file', blob, 'banner.png')
+      try {
+        const res = await fetch('/api/upload-banner', {
+          method: 'POST',
+          body: formData,
+        })
+        if (!res.ok) {
+          const data = await res.json()
+          setError(data.error || 'Ошибка сохранения')
+          setSaving(false)
+          return
+        }
+        const data = await res.json()
+        const supabase = createClient()
+        const timestamp = Date.now()
+        await (supabase.from('profiles') as any)
+          .upsert({ id: userId, banner_url: data.url + '?t=' + timestamp }, { onConflict: 'id' })
+        onSaved(data.url + '?t=' + timestamp)
+        setSaving(false)
+        onClose()
+      } catch (err) {
+        setError('Ошибка сохранения')
+        setSaving(false)
+      }
     }, 'image/png')
   }
 
@@ -208,6 +237,9 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
               onChange={handlePhotoUpload}
               style={{ display: 'none' }}
             />
+            {error && <span style={{
+              fontSize: '12px', color: '#ef4444', fontWeight: 500
+            }}>{error}</span>}
 
             {/* Tool toggle */}
             <div style={{ display: 'flex', gap: '4px' }}>

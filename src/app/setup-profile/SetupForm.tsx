@@ -21,10 +21,14 @@ export default function SetupForm({ userId }: { userId: string }) {
       return
     }
     setLoading(true)
-    const supabase = createClient()
-    const { error } = await (supabase.from('profiles') as any).insert({ id: userId, username: trimmed })
-    if (error) {
-      setError(error.code === '23505' ? 'Такой юзернейм уже занят' : error.message)
+    const res = await fetch('/api/setup-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: trimmed }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || !data.ok) {
+      setError(data.error ?? 'Ошибка при создании юзернейма')
       setLoading(false)
       return
     }

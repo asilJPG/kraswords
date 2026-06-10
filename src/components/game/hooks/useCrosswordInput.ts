@@ -11,7 +11,7 @@ interface Params {
   direction: Direction
   directionRef: React.RefObject<Direction>
   hiddenInputRef: React.RefObject<HTMLInputElement | null>
-  onSolved: () => void
+  onSolved: (answers: Record<string, string>) => void
 }
 
 export function useCrosswordInput({
@@ -54,7 +54,7 @@ export function useCrosswordInput({
     advanceCaret(row, col)
     if (checkSolved(next)) {
       setSolved(true)
-      onSolvedRef.current()
+      onSolvedRef.current(next)
     }
   }, [selected, advanceCaret, checkSolved])
 

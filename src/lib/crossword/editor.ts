@@ -154,6 +154,90 @@ export function coveredCells(words: EditorWord[]): Set<string> {
   return set
 }
 
+/**
+ * Connectivity analysis of placed words.
+ * `connected` is true when every placed word shares a cell (directly or
+ * transitively) with every other placed word — i.e. one big group.
+ * Returns the size of the largest component and the orphan ids.
+ */
+export interface ConnectivityReport {
+  connected: boolean
+  placedCount: number
+  largestGroup: number
+  orphans: string[]            // ids of words not in the largest group
+  intersectionCount: number    // total shared cells
+}
+
+export function analyzeConnectivity(words: EditorWord[]): ConnectivityReport {
+  const placed = words.filter(w => w.placed)
+  if (placed.length === 0) {
+    return { connected: true, placedCount: 0, largestGroup: 0, orphans: [], intersectionCount: 0 }
+  }
+  if (placed.length === 1) {
+    return { connected: true, placedCount: 1, largestGroup: 1, orphans: [], intersectionCount: 0 }
+  }
+
+  // cell -> word ids touching it
+  const cellToWords = new Map<string, string[]>()
+  for (const w of placed) {
+    for (let i = 0; i < w.answer.length; i++) {
+      const r = w.direction === 'down' ? w.row + i : w.row
+      const c = w.direction === 'across' ? w.col + i : w.col
+      const k = `${r},${c}`
+      const list = cellToWords.get(k) ?? []
+      list.push(w.id)
+      cellToWords.set(k, list)
+    }
+  }
+
+  let intersectionCount = 0
+  for (const list of cellToWords.values()) {
+    if (list.length > 1) intersectionCount += 1
+  }
+
+  // BFS components
+  const byId = new Map(placed.map(w => [w.id, w]))
+  const visited = new Set<string>()
+  let largest = 0
+  let largestSet: Set<string> = new Set()
+
+  for (const start of placed) {
+    if (visited.has(start.id)) continue
+    const component = new Set<string>([start.id])
+    const queue = [start.id]
+    visited.add(start.id)
+    while (queue.length > 0) {
+      const wid = queue.shift()!
+      const w = byId.get(wid)!
+      for (let i = 0; i < w.answer.length; i++) {
+        const r = w.direction === 'down' ? w.row + i : w.row
+        const c = w.direction === 'across' ? w.col + i : w.col
+        const list = cellToWords.get(`${r},${c}`) ?? []
+        for (const otherId of list) {
+          if (!visited.has(otherId)) {
+            visited.add(otherId)
+            component.add(otherId)
+            queue.push(otherId)
+          }
+        }
+      }
+    }
+    if (component.size > largest) {
+      largest = component.size
+      largestSet = component
+    }
+  }
+
+  const orphans = placed.filter(w => !largestSet.has(w.id)).map(w => w.id)
+  return {
+    connected: orphans.length === 0,
+    placedCount: placed.length,
+    largestGroup: largest,
+    orphans,
+    intersectionCount,
+  }
+}
+
 export function uid() {
   return Math.random().toString(36).slice(2, 10)
 }

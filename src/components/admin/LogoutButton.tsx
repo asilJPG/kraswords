@@ -2,18 +2,13 @@
 
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { ADMIN_COOKIE } from '@/lib/admin-auth'
 
-export default function LogoutButton({ isAdminCookie }: { isAdminCookie: boolean }) {
+export default function LogoutButton() {
   const router = useRouter()
 
   const onClick = async () => {
-    if (isAdminCookie) {
-      await fetch('/api/admin-logout', { method: 'POST' })
-    } else {
-      const supabase = createClient()
-      await supabase.auth.signOut()
-    }
+    const supabase = createClient()
+    await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
   }

@@ -51,13 +51,13 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
     direction: sel.direction,
     directionRef: sel.directionRef,
     hiddenInputRef,
-    onSolved: () => {
+    onSolved: (answers) => {
       const t = timerRef.current
       saveGame({ crosswordId: crossword.id, time: t, date: new Date().toISOString(), solved: true })
       fetch('/api/game-result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ crossword_id: crossword.id, time_seconds: t, solved: true }),
+        body: JSON.stringify({ crossword_id: crossword.id, time_seconds: t, answers }),
       })
         .then(r => r.json())
         .then(d => { if (d.rank) setRank(d.rank) })

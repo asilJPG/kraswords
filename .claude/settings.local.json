@@ -17,7 +17,15 @@
       "Bash(where lmstudio *)",
       "Bash(ollama list *)",
       "Bash(curl -s http://localhost:11434/api/tags)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(npx next *)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(curl -s -I http://localhost:3000/login)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{redirect_url}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/login)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{redirect_url}\\\\n\" http://localhost:3000/admin)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{redirect_url}\\\\n\" http://localhost:3000/profile)",
+      "Bash(curl -s -X POST http://localhost:3000/api/resolve-login -H 'Content-Type: application/json' -d '{\"login\":\"nosuchuser_zzz\"}')"
     ]
   }
 }

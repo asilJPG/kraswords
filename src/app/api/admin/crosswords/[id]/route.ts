@@ -1,19 +1,22 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin-client'
-import { ADMIN_COOKIE, ADMIN_TOKEN } from '@/lib/admin-auth'
+import { isUserAdmin } from '@/lib/admin-auth'
 
-async function checkAdmin() {
-  const cookieStore = await cookies()
-  return cookieStore.get(ADMIN_COOKIE)?.value === ADMIN_TOKEN
+async function requireAdmin() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+  return await isUserAdmin(supabase, user.id)
 }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!await checkAdmin()) {
+  if (!(await requireAdmin())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const { id } = await params
   const supabase = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from('crosswords') as any)
     .select('*')
     .eq('id', id)
@@ -26,11 +29,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!await checkAdmin()) {
+  if (!(await requireAdmin())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const { id } = await params
   const supabase = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from('crosswords') as any).delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
