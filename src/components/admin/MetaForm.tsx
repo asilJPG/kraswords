@@ -80,17 +80,17 @@ export default function MetaForm({ meta, onChange }: Props) {
 
       {meta.theme_id === 'custom' && (
         <div style={{
-          border: '1px solid #e5e7eb',
+          border: '1px solid var(--border)',
           borderRadius: '10px',
           padding: '12px',
-          background: '#f9fafb',
+          background: 'var(--surface)',
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
           marginTop: '4px',
           marginBottom: '4px',
         }}>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: '#4b5563', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
             Настройки темы
           </span>
 
@@ -198,7 +198,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <label style={{ display: 'block' }}>
       <span style={{
         display: 'block', fontSize: '10px', textTransform: 'uppercase',
-        letterSpacing: '0.5px', color: '#9ca3af', fontWeight: 600, marginBottom: '4px',
+        letterSpacing: '0.5px', color: 'var(--text-light)', fontWeight: 600, marginBottom: '4px',
       }}>{label}</span>
       {children}
     </label>
@@ -207,9 +207,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const inp: React.CSSProperties = {
   padding: '8px 10px',
-  background: '#fff',
-  color: '#111827',
-  border: '1px solid #e5e7eb',
+  background: 'var(--bg)',
+  color: 'var(--text)',
+  border: '1px solid var(--border)',
   borderRadius: '8px',
   fontSize: '13px',
   outline: 'none',
@@ -219,8 +219,8 @@ const inp: React.CSSProperties = {
 
 const colorInp: React.CSSProperties = {
   padding: '0 2px',
-  background: '#fff',
-  border: '1px solid #e5e7eb',
+  background: 'var(--bg)',
+  border: '1px solid var(--border)',
   borderRadius: '8px',
   height: '32px',
   outline: 'none',

@@ -2,7 +2,7 @@
 
 Файл обновляется при каждом `git push`. Если открыл на другом компе — читай этот файл первым после `git pull`.
 
-Last update: 2026-06-10 (Feature: Custom styling, Live Preview, hydration fix & middleware optimization)
+Last update: 2026-06-11 (Cleanup: crosswords.ts, admin CSS variables, username length constraints with exceptions)
 
 ---
 
@@ -24,15 +24,15 @@ src/
 │   ├── supabase/      — client, server, proxy (middleware), types, admin-client (service role)
 │   ├── admin-auth.ts  — isUserAdmin(supabase, userId) проверяет profiles.role==='admin'
 │   ├── auth-errors.ts — humanizeAuthError() Supabase ошибки → русский
-│   ├── crosswords.ts  — массив старых хардкод-кроссвордов + themes + verifyAnswers (themes используются, остальное legacy)
-│   └── gameHistory.ts — localStorage stats + achievements (legacy, мигрировать на сервер когда понадобится)
+│   ├── crosswords.ts  — 220 строк: типы, themes (палитры тем), verifyAnswers, getDifficultyColor/Bg
+│   └── gameHistory.ts — localStorage achievements + история игр (legacy, мигрировать когда нужно)
 │
 ├── components/
-│   ├── game/          — CrosswordGame (оркестратор ~200 строк) + Grid/Cell/CluesList/ClueBanner/GameNav/GameControls/HiddenInput + effects/* + hooks/*
+│   ├── game/          — CrosswordGame (~200 строк) + Grid/Cell/CluesList/ClueBanner/GameNav/GameControls/HiddenInput + effects/* + hooks/*
 │   ├── admin/         — CrosswordEditor + EditorGrid/EditorCell/WordList/AddWordForm/MetaForm/PublishToggle/DeleteButton/LogoutButton/HideMainNav + hooks
-│   ├── profile/       — BannerEditor
+│   ├── profile/       — BannerEditor, AvatarPicker
 │   ├── login/         — LoginForm
-│   ├── BottomSheet, ResultSheet, EventBanner, CrosswordList, Nav, ThemeToggle
+│   ├── BottomSheet, ResultSheet, EventBanner, CrosswordList, Nav, ThemeToggle, ConfirmDialog
 │
 ├── app/
 │   ├── page.tsx (главная, force-dynamic)
@@ -42,14 +42,14 @@ src/
 │   ├── profile/{page, ProfileClient}.tsx
 │   ├── setup-profile/{page, SetupForm}.tsx
 │   ├── top/page.tsx
-│   ├── events/page.tsx
 │   └── api/
-│       ├── admin/crosswords/{route, [id]/route}.ts (GET, POST, PATCH, DELETE)
-│       ├── check/route.ts
-│       ├── game-result/route.ts  (СЕРВЕР сам верифицирует, клиент шлёт answers)
+│       ├── admin/crosswords/{route, [id]/route}.ts (GET, POST, PATCH публикация/snять, DELETE)
+│       ├── check/route.ts          (использует fetchCrosswordById)
+│       ├── game-result/route.ts    (сервер сам верифицирует через verifyAnswers)
 │       ├── leaderboard/route.ts
-│       ├── resolve-login/route.ts  (email или username → email)
+│       ├── resolve-login/route.ts  (email или username → email, generic 401 на любую неудачу)
 │       ├── setup-profile/route.ts  (server-side validation + insert)
+│       ├── update-profile/route.ts (PATCH avatar/etc — jsonb)
 │       └── upload-banner/route.ts
 │
 └── proxy.ts — корневой middleware (Next 16: proxy)
@@ -63,14 +63,16 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=…
 SUPABASE_SERVICE_ROLE_KEY=…  ← КРИТИЧНО, без него API крашатся
 ```
 
-`ADMIN_EMAILS` больше не нужен — переключились на `profiles.role`.
+`ADMIN_EMAILS` НЕ нужен — переключились на `profiles.role`.
 
 ## SQL для прогона
 
-Прогнать в Supabase SQL Editor по порядку (если не прогонял):
+В Supabase SQL Editor по порядку (если не прогонял):
 1. `supabase/schema.sql` (таблицы + RLS)
 2. `supabase/seed.sql` (опционально, демо-кроссворды)
 3. `supabase/migrations/001_game_results_unique.sql` (UNIQUE constraint на (user_id, crossword_id))
+4. `supabase/migrations/002_profile_avatar.sql` (jsonb avatar column)
+5. `supabase/migrations/003_crossword_theme_custom.sql` (theme_custom для кастомных палитр)
 
 Storage bucket `banners` — создаётся вручную в Supabase Dashboard → Storage (политики раскомментированы в schema.sql).
 
@@ -79,40 +81,50 @@ Storage bucket `banners` — создаётся вручную в Supabase Dashb
 update profiles set role = 'admin' where username = '<твой_ник>';
 ```
 
+**Обновить ограничение юзернеймов до 4-20 символов с исключениями ('1', '2', 'a'):**
+```sql
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_username_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_check CHECK ((char_length(username) between 4 and 20) OR username IN ('1', '2', 'a'));
+```
+
 ## Что готово (с фокусом на launch)
 
 - ✅ Регистрация/вход email или username, человеческие ошибки
 - ✅ /admin только для role='admin', SQL-промоут
 - ✅ Редактор-конструктор + autosave + проверка связности слов
-- ✅ PublishToggle в списке /admin (1 клик)
-- ✅ Server-verify решения (нельзя зафейкать solved)
+- ✅ Кастомные палитры (`theme_custom` jsonb) + живой preview в редакторе
+- ✅ PublishToggle в списке /admin: 1 клик, inline-ошибка с авто-исчезновением (3s)
+- ✅ DeleteButton: кастомный `ConfirmDialog` модал (Esc/Enter, scroll lock, danger variant)
+- ✅ Server-verify решения через `fetchCrosswordById` из БД (не локалка)
 - ✅ Game results dedupe (UNIQUE constraint, лучшее время)
-- ✅ Banner upload: 500KB лимит, MIME whitelist, через /api/upload-banner
-- ✅ Banner editor: канвас 1600×540, JPEG, серая подложка с границей
+- ✅ Banner upload: 500KB, MIME whitelist, JPEG q=0.9, canvas 1600×540
+- ✅ Banner editor: серая подложка канваса с границей
+- ✅ AvatarPicker: emoji-сетка 6×N, расширяемо под характеры (jsonb {type:'emoji'} now → {type:'character'} later)
 - ✅ Лидерборд (`/top`) — игроки + кроссворды
-- ✅ Профиль с историей, ачивками, кнопкой "выйти"
-- ✅ Тёмная тема через CSS vars (главная, /top, /profile, /login, /setup-profile, ResultSheet, BottomSheet)
-- ✅ Duolingo-style ResultSheet с конфетти и поэтапной анимацией
+- ✅ Профиль с историей, ачивками, банером, аватаром, кнопкой "выйти"
+- ✅ Тёмная тема через CSS vars (main, /top, /profile, /login, /setup, /admin, ResultSheet, BottomSheet, ConfirmDialog)
+- ✅ ResultSheet Duolingo-style: конфетти, поэтапная анимация, кнопка share только если есть `navigator.share`
 - ✅ Mobile keyboard fix (iOS Safari): HiddenInput в видимой области + sync focus
-- ✅ HSTS, password ≥8, generic 401 на резолв-логин
-- ✅ Кастомизация оформления (цвета, шрифты, эффекты) через БД (`theme_custom`)
-- ✅ Интерактивный полноэкранный предпросмотр (Preview) в панели администратора без сохранения в БД
+- ✅ HSTS, password ≥8, generic 401, RLS, UNIQUE constraints
+- ✅ Чистка legacy: убран массив старых кроссвордов и шаблон `P` из `crosswords.ts` (381 → 179 строк)
+- ✅ Удалена `/events` страница (mockEvents больше нет)
+- ✅ Переведен хардкод цветов на CSS-переменные в 7 файлах админки (с сохранением необходимых сигнальных цветов в ячейках)
+- ✅ Юзернеймы обычных пользователей ограничены 4–20 символами, с поддержкой коротких исключений ('1', '2', 'a') на клиенте, сервере и в БД
 
 ## Известные мелочи / pending
 
 - [ ] **Cell/ClueBanner/GameControls/CrosswordList** — themed по теме кроссворда (Рик и Морти, etc), не light/dark. By design — НЕ трогать.
-- [ ] **Админка** (`/admin/*`) — пока хардкод цвета (не на vars). Низкий приоритет, ты единственный админ.
-- [ ] **gameHistory.ts** — половина дублирует Supabase (localStorage leaderboard). Чистить когда переходим на server-side achievements.
+- [ ] **gameHistory.ts** — у залогиненных `ResultSheet` всё ещё читает прогресс ачивок из localStorage. Чистить когда переходим на server-side achievements (когда ачивки начнут давать привилегии).
 - [ ] **Колонка `author` в БД** — оставлена с дефолтом 'аноним'. Дропать миграцией когда захочешь.
 - [ ] **Старые баннеры** в БД были 600×200 — после фикса canvas 1600×540 они выглядят размытыми. Перерисовать или скрипт обновить.
 
 ## Отложено на post-launch
 
-- CSP nonces (унас `unsafe-inline` в `next.config.ts`)
+- CSP nonces (у нас `unsafe-inline` в `next.config.ts`)
 - CSRF tokens (SameSite=Lax дефолт даёт базовый)
 - Rate limit на /login (нужна Upstash/Vercel KV)
 - Audit log админ-действий
-- Пагинация лидерборда
+- Пагинация лидерборда (top-10 хардкод)
 - Server-side achievements (когда ачивки начнут давать реальные привилегии)
 - Forgot password / email verification callback
 - OG image / favicon / реальный домен
@@ -133,7 +145,7 @@ A. Auth
 1. `/login` → "нет аккаунта?" → зарегаться → редирект на `/setup-profile` или `/`
 2. Выйти → войти по **username** + password
 3. Выйти → войти по **email** + password
-4. Неправильный пароль → "Неверный логин или пароль"
+4. Неправильный пароль → "Неверный логин или пароль" (generic)
 
 B. Админка
 5. SQL: промоутни себя
@@ -141,19 +153,23 @@ B. Админка
 7. `/admin/new` → создать кроссворд из 4 связанных слов → сохранить
 8. В списке → нажать "опубликовать" → сразу появляется на `/`
 9. Попробовать сохранить кроссворд с несвязанным словом → красная ошибка, сирота красным
+10. Кликнуть × → кастомный модал подтверждения → удалить → удалилось
+11. Переключить тёмную тему → /admin/* должна нормально читаться
 
 C. Игра
-10. Открыть кроссворд с `/` → решить → ResultSheet с конфетти
-11. `/top` → твой результат в лидерборде
-12. `/profile` → стата + кнопка "выйти"
+12. Открыть кроссворд с `/` → решить → ResultSheet с конфетти
+13. На десктопе кнопки share не должно быть, только "продолжить →"
+14. На мобиле — должны быть обе кнопки
+15. `/top` → твой результат в лидерборде
+16. `/profile` → стата + кликнуть аватар → emoji picker → сохранить
 
 D. Mobile
-13. Открыть на телефоне → тапнуть ячейку → клава должна вылезти
-14. Решить → должен показать sheet с поделиться
+17. Открыть на телефоне → тапнуть ячейку → клава должна вылезти
+18. Решить → должен показать sheet с поделиться
 
 E. Безопасность
-15. DevTools → перехватить POST `/api/game-result` → отправить пустые answers → должен записать solved=false
-16. `/api/admin/crosswords` без auth → 401
+19. DevTools → перехватить POST `/api/game-result` → отправить пустые answers → должен записать solved=false
+20. `/api/admin/crosswords` без auth → 401
 
 ## Деплой
 

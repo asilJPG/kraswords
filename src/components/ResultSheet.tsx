@@ -60,6 +60,11 @@ export default function ResultSheet({
 }: Props) {
   const [progress, setProgress] = useState<Record<string, number>>({})
   const [stage, setStage] = useState(0)
+  const [canShare, setCanShare] = useState(false)
+
+  useEffect(() => {
+    setCanShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function')
+  }, [])
 
   useEffect(() => {
     if (!open) { setStage(0); return }
@@ -182,31 +187,31 @@ export default function ResultSheet({
           opacity: stage >= 2 ? 1 : 0,
           transition: 'opacity 0.4s ease-out 0.2s',
         }}>
-          <button
-            onClick={() => {
-              if (typeof navigator !== 'undefined' && navigator.share) {
+          {canShare && (
+            <button
+              onClick={() => {
                 navigator.share({
                   title: 'красвордс',
                   text: `Решил "${crosswordTitle}" за ${fmt(time)}!`,
                 }).catch(() => { /* user cancelled */ })
-              }
-            }}
-            style={{
-              flex: 1,
-              padding: '14px',
-              background: 'var(--surface-2)',
-              color: 'var(--text-secondary)',
-              border: 'none',
-              borderRadius: '14px',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              minHeight: '48px',
-            }}
-          >
-            поделиться
-          </button>
+              }}
+              style={{
+                flex: 1,
+                padding: '14px',
+                background: 'var(--surface-2)',
+                color: 'var(--text-secondary)',
+                border: 'none',
+                borderRadius: '14px',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                minHeight: '48px',
+              }}
+            >
+              поделиться
+            </button>
+          )}
           <button
             onClick={onClose}
             style={{

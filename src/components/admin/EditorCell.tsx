@@ -15,9 +15,9 @@ interface Props {
 export default function EditorCell({
   size, letter, isCovered, isValid, isPreview, isConflict, isIntersection, onClick, onHover,
 }: Props) {
-  let bg = '#fff'
+  let bg = 'var(--bg)'
   if (!isCovered && !isPreview && !isValid) bg = '#1f2937'  // black cell
-  if (isCovered) bg = '#fff'
+  if (isCovered) bg = 'var(--bg)'
   if (isValid) bg = '#dcfce7'                                // green hint
   if (isPreview) bg = '#bbf7d0'                              // brighter on preview path
   if (isIntersection) bg = '#86efac'                         // intersection bonus
@@ -31,7 +31,7 @@ export default function EditorCell({
         width: size,
         height: size,
         background: bg,
-        border: '1px solid #e5e7eb',
+        border: '1px solid var(--border)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -39,7 +39,7 @@ export default function EditorCell({
         fontWeight: 600,
         cursor: 'pointer',
         userSelect: 'none',
-        color: '#111827',
+        color: 'var(--text)',
         transition: 'background 0.08s',
       }}
     >

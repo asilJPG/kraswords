@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin-client'
 
 // POST { username } → { ok: true } or { error, status }
@@ -13,8 +13,12 @@ export async function POST(req: Request) {
   }
 
   // Validate username format
-  if (username.length < 2 || username.length > 20) {
-    return NextResponse.json({ error: 'Юзернейм: 2–20 символов' }, { status: 400 })
+  const exceptions = ['1', '2', 'a']
+  if (username.length < 4 && !exceptions.includes(username)) {
+    return NextResponse.json({ error: 'Юзернейм: минимум 4 символа' }, { status: 400 })
+  }
+  if (username.length < 1 || username.length > 20) {
+    return NextResponse.json({ error: 'Юзернейм: 1–20 символов' }, { status: 400 })
   }
 
   if (!/^[a-zA-Zа-яёА-ЯЁ0-9_]+$/.test(username)) {
@@ -22,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   // Verify caller is logged in
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
   if (authError || !user) {

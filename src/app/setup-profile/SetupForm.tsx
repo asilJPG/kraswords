@@ -14,7 +14,12 @@ export default function SetupForm({ userId }: { userId: string }) {
     e.preventDefault()
     setError(null)
     const trimmed = username.trim()
-    if (trimmed.length < 2) { setError('Минимум 2 символа'); return }
+    const exceptions = ['1', '2', 'a']
+    if (trimmed.length < 4 && !exceptions.includes(trimmed)) {
+      setError('Минимум 4 символа')
+      return
+    }
+    if (trimmed.length < 1) { setError('Минимум 1 символ'); return }
     if (trimmed.length > 20) { setError('Максимум 20 символов'); return }
     if (!/^[a-zA-Zа-яёА-ЯЁ0-9_]+$/.test(trimmed)) {
       setError('Только буквы, цифры и _')
@@ -62,7 +67,7 @@ export default function SetupForm({ userId }: { userId: string }) {
         maxLength={20}
       />
       <div style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px' }}>
-        2–20 символов, только буквы/цифры/_
+        4–20 символов, только буквы/цифры/_
       </div>
 
       {error && (

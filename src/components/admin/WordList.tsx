@@ -21,7 +21,7 @@ export default function WordList({
 }: Props) {
   const orphanSet = new Set(orphans ?? [])
   if (words.length === 0) {
-    return <div style={{ padding: '12px', textAlign: 'center', color: '#d1d5db', fontSize: '12px' }}>
+    return <div style={{ padding: '12px', textAlign: 'center', color: 'var(--border-strong)', fontSize: '12px' }}>
       пока нет слов — добавь сверху
     </div>
   }
@@ -56,9 +56,9 @@ export default function WordList({
                 width: '100%',
                 marginTop: '4px',
                 padding: '4px 6px',
-                background: '#fff',
-                color: '#111827',
-                border: '1px solid #e5e7eb',
+                background: 'var(--bg)',
+                color: 'var(--text)',
+                border: '1px solid var(--border)',
                 borderRadius: '6px',
                 fontSize: '12px',
                 outline: 'none',
@@ -102,12 +102,12 @@ const miniBtn: React.CSSProperties = {
   fontFamily: 'inherit',
 }
 const primaryBtn: React.CSSProperties = {
-  ...miniBtn, background: '#6366f1', color: '#fff', border: 'none',
+  ...miniBtn, background: '#6366f1', color: 'var(--bg)', border: 'none',
 }
 const dirBtn = (active: boolean): React.CSSProperties => ({
   ...miniBtn,
   background: active ? '#6366f1' : 'var(--surface)',
-  color: active ? '#fff' : 'var(--text)',
+  color: active ? 'var(--bg)' : 'var(--text)',
   border: active ? 'none' : '1px solid var(--border)',
   width: '32px',
 })

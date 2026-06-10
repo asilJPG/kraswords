@@ -31,8 +31,14 @@ export default function LoginForm() {
 
     if (mode === 'register') {
       const trimmedUsername = username.trim()
-      if (trimmedUsername.length < 2 || trimmedUsername.length > 20) {
-        setError('Юзернейм: 2–20 символов')
+      const exceptions = ['1', '2', 'a']
+      if (trimmedUsername.length < 4 && !exceptions.includes(trimmedUsername)) {
+        setError('Юзернейм: минимум 4 символа')
+        setLoading(false)
+        return
+      }
+      if (trimmedUsername.length < 1 || trimmedUsername.length > 20) {
+        setError('Юзернейм: 1–20 символов')
         setLoading(false)
         return
       }
@@ -168,7 +174,7 @@ export default function LoginForm() {
             maxLength={20}
           />
           <div style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px' }}>
-            2–20 символов, только буквы/цифры/_, виден в лидерборде
+            4–20 символов, только буквы/цифры/_, виден в лидерборде
           </div>
         </>
       )}

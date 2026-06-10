@@ -28,12 +28,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           display: 'flex', alignItems: 'center', gap: '20px',
         }}>
           <Link href="/admin" style={{ fontWeight: 700, fontSize: '15px' }}>
-            красвордс <span style={{ color: '#9ca3af', fontWeight: 400 }}>· админ</span>
+            красвордс <span style={{ color: 'var(--text-light)', fontWeight: 400 }}>· админ</span>
           </Link>
           <Link href="/admin" style={navLink}>кроссворды</Link>
           <Link href="/admin/new" style={navLink}>+ новый</Link>
           <Link href="/" style={{ ...navLink, marginLeft: 'auto' }}>← на сайт</Link>
-          <span style={{ fontSize: '12px', color: '#9ca3af' }}>{user.email}</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-light)' }}>{user.email}</span>
           <LogoutButton />
         </div>
       </header>

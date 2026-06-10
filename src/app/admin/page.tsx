@@ -34,7 +34,7 @@ export default async function AdminListPage() {
       {error && (
         <div style={{
           padding: '12px 14px', borderRadius: '10px',
-          background: '#fef2f2', color: '#dc2626', fontSize: '12px',
+          background: 'var(--danger-soft)', color: 'var(--danger)', fontSize: '12px',
           marginBottom: '16px',
         }}>
           {error.message}
@@ -44,7 +44,7 @@ export default async function AdminListPage() {
       {!error && (!rows || rows.length === 0) ? (
         <div style={{
           padding: '60px 20px', textAlign: 'center',
-          color: '#9ca3af', fontSize: '14px',
+          color: 'var(--text-light)', fontSize: '14px',
         }}>
           пока ничего нет. создай первый кроссворд.
         </div>
@@ -61,9 +61,9 @@ export default async function AdminListPage() {
               <span style={{ fontSize: '24px' }}>{r.emoji}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '14px', fontWeight: 600 }}>{r.title}</div>
-                <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-light)' }}>
                   {r.category} · {r.word_count} слов · {r.difficulty}
-                  {!r.published && <span style={{ marginLeft: '8px', color: '#f59e0b' }}>· черновик</span>}
+                  {!r.published && <span style={{ marginLeft: '8px', color: 'var(--warning)' }}>· черновик</span>}
                 </div>
               </div>
               <PublishToggle id={r.id} published={r.published} />

@@ -58,9 +58,9 @@ export default function AddWordForm({ onAdd }: Props) {
 
 const inp: React.CSSProperties = {
   padding: '8px 10px',
-  background: '#fff',
-  color: '#111827',
-  border: '1px solid #e5e7eb',
+  background: 'var(--bg)',
+  color: 'var(--text)',
+  border: '1px solid var(--border)',
   borderRadius: '8px',
   fontSize: '13px',
   outline: 'none',
