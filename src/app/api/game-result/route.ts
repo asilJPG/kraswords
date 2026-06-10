@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin-client'
-import { getCrossword, verifyAnswers } from '@/lib/crosswords'
+import { verifyAnswers } from '@/lib/crosswords'
+import { fetchCrosswordById } from '@/lib/crossword/server-api'
 
 export async function POST(req: Request) {
   const supabase = await createClient()
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
   }
 
   // Server-side verification: fetch crossword and verify answers
-  const crossword = getCrossword(crossword_id)
+  const crossword = await fetchCrosswordById(crossword_id)
   if (!crossword) {
     return NextResponse.json({ error: 'Crossword not found' }, { status: 404 })
   }

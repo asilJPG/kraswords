@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getCrossword, verifyAnswers } from '@/lib/crosswords'
+import { verifyAnswers } from '@/lib/crosswords'
+import { fetchCrosswordById } from '@/lib/crossword/server-api'
 
 const CELL_KEY_RE = /^\d+,\d+$/
 const LETTER_RE = /^[A-ZА-ЯЁ]$/i
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
       normalized[key] = value.toUpperCase()
     }
 
-    const crossword = getCrossword(id)
+    const crossword = await fetchCrosswordById(id)
     if (!crossword) {
       return NextResponse.json({ error: 'Crossword not found' }, { status: 404 })
     }
