@@ -23,7 +23,7 @@ export default function AddWordForm({ onAdd }: Props) {
   return (
     <form onSubmit={submit} style={{
       display: 'flex', flexDirection: 'column', gap: '8px',
-      padding: '12px', background: '#f9fafb', borderRadius: '12px',
+      padding: '12px', background: 'var(--surface-2)', borderRadius: '12px',
     }}>
       <input
         type="text"
@@ -41,8 +41,8 @@ export default function AddWordForm({ onAdd }: Props) {
       />
       <button type="submit" style={{
         padding: '8px',
-        background: '#111827',
-        color: '#fff',
+        background: 'var(--text)',
+        color: 'var(--bg)',
         border: 'none',
         borderRadius: '8px',
         fontSize: '13px',
@@ -59,6 +59,7 @@ export default function AddWordForm({ onAdd }: Props) {
 const inp: React.CSSProperties = {
   padding: '8px 10px',
   background: '#fff',
+  color: '#111827',
   border: '1px solid #e5e7eb',
   borderRadius: '8px',
   fontSize: '13px',

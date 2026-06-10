@@ -231,3 +231,8 @@ button {
     display: none;
   }
 }
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.85 !important;
+}

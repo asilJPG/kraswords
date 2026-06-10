@@ -137,7 +137,7 @@ export default function CrosswordEditor({ draftId, initialMeta, initialWords }: 
             style={{
               padding: '8px 10px', background: '#fff', border: '1px solid #e5e7eb',
               borderRadius: '8px', fontSize: '13px', outline: 'none',
-              fontFamily: 'monospace', width: '100%',
+              fontFamily: 'monospace', width: '100%', color: '#111827',
             }}
           />
         </label>
@@ -276,10 +276,10 @@ export default function CrosswordEditor({ draftId, initialMeta, initialWords }: 
 }
 
 const card: React.CSSProperties = {
-  background: '#fff',
+  background: 'var(--surface)',
   borderRadius: '14px',
   padding: '16px',
-  border: '1px solid #f3f4f6',
+  border: '1px solid var(--border)',
 }
 
 const lblSpan: React.CSSProperties = {

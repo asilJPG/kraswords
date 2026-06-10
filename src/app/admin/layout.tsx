@@ -13,14 +13,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!(await isUserAdmin(supabase, user.id))) redirect('/')
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fafafa' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--surface-2)' }}>
       <HideMainNav />
 
       <header style={{
         position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(255,255,255,0.9)',
+        background: 'var(--surface)',
         backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid #f3f4f6',
+        borderBottom: '1px solid var(--border)',
       }}>
         <div style={{
           maxWidth: '1280px', margin: '0 auto',
@@ -47,7 +47,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
 const navLink: React.CSSProperties = {
   fontSize: '13px',
-  color: '#6b7280',
+  color: 'var(--text-secondary)',
   padding: '6px 10px',
   borderRadius: '8px',
 }

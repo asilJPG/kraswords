@@ -33,16 +33,17 @@ export default function WordList({
         const isOrphan = w.placed && orphanSet.has(w.id)
         return (
           <div key={w.id} style={{
-            background: isPending ? '#eef2ff' : isOrphan ? '#fef2f2' : w.placed ? '#f0fdf4' : '#f9fafb',
-            border: isPending ? '1px solid #c7d2fe' : isOrphan ? '1px solid #fecaca' : '1px solid transparent',
+            background: isPending ? 'rgba(99, 102, 241, 0.12)' : isOrphan ? 'var(--danger-soft)' : w.placed ? 'var(--accent-soft)' : 'var(--surface-2)',
+            border: isPending ? '1px solid #6366f1' : isOrphan ? '1px solid var(--danger)' : '1px solid var(--border)',
             borderRadius: '10px',
             padding: '8px 10px',
             fontSize: '12px',
+            color: 'var(--text)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontWeight: 700, letterSpacing: '0.5px' }}>{w.answer}</span>
-              <span style={{ color: '#9ca3af', fontSize: '10px' }}>{w.answer.length}б</span>
-              {w.placed && !isPending && <span style={{ color: '#16a34a', fontSize: '10px', marginLeft: 'auto' }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{w.answer.length}б</span>
+              {w.placed && !isPending && <span style={{ color: 'var(--accent)', fontSize: '10px', marginLeft: 'auto' }}>
                 {w.direction === 'across' ? '→' : '↓'} ({w.row+1},{w.col+1})
               </span>}
             </div>
@@ -56,6 +57,7 @@ export default function WordList({
                 marginTop: '4px',
                 padding: '4px 6px',
                 background: '#fff',
+                color: '#111827',
                 border: '1px solid #e5e7eb',
                 borderRadius: '6px',
                 fontSize: '12px',
@@ -79,7 +81,7 @@ export default function WordList({
                 <button onClick={() => onStartPlacement(w.id)} style={primaryBtn}>поставить</button>
               )}
               <button onClick={() => onDelete(w.id)} style={{
-                ...miniBtn, marginLeft: 'auto', color: '#dc2626',
+                ...miniBtn, marginLeft: 'auto', color: 'var(--danger)',
               }}>×</button>
             </div>
           </div>
@@ -92,8 +94,9 @@ export default function WordList({
 const miniBtn: React.CSSProperties = {
   padding: '4px 8px',
   fontSize: '11px',
-  background: '#fff',
-  border: '1px solid #e5e7eb',
+  background: 'var(--surface)',
+  color: 'var(--text-secondary)',
+  border: '1px solid var(--border)',
   borderRadius: '6px',
   cursor: 'pointer',
   fontFamily: 'inherit',
@@ -103,8 +106,8 @@ const primaryBtn: React.CSSProperties = {
 }
 const dirBtn = (active: boolean): React.CSSProperties => ({
   ...miniBtn,
-  background: active ? '#6366f1' : '#fff',
-  color: active ? '#fff' : '#111827',
-  border: active ? 'none' : '1px solid #e5e7eb',
+  background: active ? '#6366f1' : 'var(--surface)',
+  color: active ? '#fff' : 'var(--text)',
+  border: active ? 'none' : '1px solid var(--border)',
   width: '32px',
 })

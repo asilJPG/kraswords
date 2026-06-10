@@ -16,11 +16,11 @@ export default function LogoutButton() {
   return (
     <button onClick={onClick} style={{
       padding: '6px 10px',
-      background: '#f3f4f6',
+      background: 'var(--surface-2)',
       border: 'none',
       borderRadius: '8px',
       fontSize: '12px',
-      color: '#6b7280',
+      color: 'var(--text-secondary)',
       cursor: 'pointer',
       fontFamily: 'inherit',
     }}>

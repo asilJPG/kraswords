@@ -25,10 +25,10 @@ export default function DeleteButton({ id, title }: { id: string; title: string 
     <button onClick={onClick} disabled={busy} style={{
       padding: '6px 10px',
       background: 'transparent',
-      border: '1px solid #fecaca',
+      border: '1px solid var(--danger-border)',
       borderRadius: '8px',
       fontSize: '12px',
-      color: '#dc2626',
+      color: 'var(--danger)',
       cursor: busy ? 'not-allowed' : 'pointer',
       fontFamily: 'inherit',
       opacity: busy ? 0.6 : 1,

@@ -21,8 +21,8 @@ export default async function AdminListPage() {
         <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.5px' }}>кроссворды</h1>
         <Link href="/admin/new" style={{
           padding: '8px 14px',
-          background: '#111827',
-          color: '#fff',
+          background: 'var(--text)',
+          color: 'var(--bg)',
           borderRadius: '10px',
           fontSize: '13px',
           fontWeight: 500,
@@ -54,8 +54,8 @@ export default async function AdminListPage() {
             <div key={r.id} style={{
               display: 'flex', alignItems: 'center', gap: '14px',
               padding: '14px 16px',
-              background: '#fff',
-              border: '1px solid #f3f4f6',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               borderRadius: '12px',
             }}>
               <span style={{ fontSize: '24px' }}>{r.emoji}</span>
@@ -68,8 +68,8 @@ export default async function AdminListPage() {
               </div>
               <PublishToggle id={r.id} published={r.published} />
               <Link href={`/admin/edit/${r.id}`} style={{
-                padding: '6px 12px', background: '#f3f4f6',
-                borderRadius: '8px', fontSize: '12px', color: '#374151',
+                padding: '6px 12px', background: 'var(--surface-2)',
+                borderRadius: '8px', fontSize: '12px', color: 'var(--text-secondary)',
               }}>
                 редактировать
               </Link>

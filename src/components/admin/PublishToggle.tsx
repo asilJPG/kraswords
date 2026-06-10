@@ -29,12 +29,12 @@ export default function PublishToggle({ id, published }: { id: string; published
   return (
     <button onClick={onClick} disabled={busy} style={{
       padding: '6px 12px',
-      background: published ? '#f0fdf4' : '#111827',
-      border: published ? '1px solid #bbf7d0' : 'none',
+      background: published ? 'var(--accent-soft)' : 'var(--text)',
+      border: published ? '1px solid var(--accent)' : 'none',
       borderRadius: '8px',
       fontSize: '12px',
       fontWeight: 500,
-      color: published ? '#16a34a' : '#fff',
+      color: published ? 'var(--accent)' : 'var(--bg)',
       cursor: busy ? 'not-allowed' : 'pointer',
       fontFamily: 'inherit',
       opacity: busy ? 0.6 : 1,
