@@ -4,14 +4,50 @@ import { createAdminClient } from '@/lib/supabase/admin-client'
 import { verifyAnswers } from '@/lib/crosswords'
 import { fetchCrosswordById } from '@/lib/crossword/server-api'
 
+const CELL_KEY_RE = /^\d+,\d+$/
+const LETTER_RE = /^[A-ZА-ЯЁ]$/i
+const MAX_BODY_BYTES = 50_000  // 50KB hard cap — crosswords don't need more
+
 export async function POST(req: Request) {
+  // Pre-check Content-Length to reject obvious bombs before JSON.parse
+  const cl = req.headers.get('content-length')
+  if (cl && parseInt(cl, 10) > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: 'Body too large' }, { status: 413 })
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { crossword_id, time_seconds, answers } = await req.json()
-  if (!crossword_id || typeof time_seconds !== 'number' || !answers || typeof answers !== 'object') {
-    return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
+  const body = await req.json().catch(() => null) as
+    | { crossword_id?: unknown; time_seconds?: unknown; answers?: unknown }
+    | null
+  if (!body) return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
+
+  const { crossword_id, time_seconds, answers } = body
+  if (typeof crossword_id !== 'string' || crossword_id.length > 100) {
+    return NextResponse.json({ error: 'Invalid crossword_id' }, { status: 400 })
+  }
+  if (typeof time_seconds !== 'number' || !Number.isFinite(time_seconds) || time_seconds < 0 || time_seconds > 86400) {
+    return NextResponse.json({ error: 'Invalid time_seconds' }, { status: 400 })
+  }
+  if (!answers || typeof answers !== 'object' || Array.isArray(answers)) {
+    return NextResponse.json({ error: 'Invalid answers' }, { status: 400 })
+  }
+
+  const entries = Object.entries(answers as Record<string, unknown>)
+  if (entries.length > 500) {
+    return NextResponse.json({ error: 'Answers too large' }, { status: 400 })
+  }
+  const normalisedAnswers: Record<string, string> = {}
+  for (const [key, value] of entries) {
+    if (!CELL_KEY_RE.test(key)) {
+      return NextResponse.json({ error: 'Invalid cell key' }, { status: 400 })
+    }
+    if (typeof value !== 'string' || value.length !== 1 || !LETTER_RE.test(value)) {
+      return NextResponse.json({ error: 'Invalid letter' }, { status: 400 })
+    }
+    normalisedAnswers[key] = value.toUpperCase()
   }
 
   // Server-side verification: fetch crossword and verify answers
@@ -20,7 +56,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Crossword not found' }, { status: 404 })
   }
 
-  const verification = verifyAnswers(crossword, answers)
+  const verification = verifyAnswers(crossword, normalisedAnswers)
   const solved = verification.correct
 
   const admin = createAdminClient()
