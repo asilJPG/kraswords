@@ -22,12 +22,13 @@ interface Props {
   userId: string | null
   userEmail: string | null
   dbHistory: DbRecord[]
+  titleById?: Record<string, { title: string; emoji: string }>
   username: string | null
   bannerUrl: string | null
   avatarEmoji: string
 }
 
-export default function ProfileClient({ userId, userEmail, dbHistory, username, bannerUrl: initialBannerUrl, avatarEmoji: initialAvatarEmoji }: Props) {
+export default function ProfileClient({ userId, userEmail, dbHistory, titleById, username, bannerUrl: initialBannerUrl, avatarEmoji: initialAvatarEmoji }: Props) {
   const router = useRouter()
   const [signingOut, setSigningOut] = useState(false)
   const [localHistory, setLocalHistory] = useState<GameRecord[]>([])
@@ -212,14 +213,19 @@ export default function ProfileClient({ userId, userEmail, dbHistory, username, 
         </div>
       ) : (
         <div style={{ background: 'var(--bg)', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-          {history.map((record, i) => (
+          {history.map((record, i) => {
+            const meta = titleById?.[record.id]
+            const displayTitle = meta?.title ?? record.id
+            const displayEmoji = meta?.emoji ?? '🧩'
+            return (
             <Link key={i} href={`/play/${record.id}`}>
               <div style={{
                 display: 'flex', alignItems: 'center', padding: '14px 16px', gap: '12px',
                 borderBottom: i < history.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer',
               }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: 500 }}>{record.id}</div>
+                <span style={{ fontSize: '20px' }}>{displayEmoji}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '14px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayTitle}</div>
                   <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>
                     {new Date(record.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
                   </div>
@@ -229,7 +235,8 @@ export default function ProfileClient({ userId, userEmail, dbHistory, username, 
                 </div>
               </div>
             </Link>
-          ))}
+            )
+          })}
         </div>
       )}
 

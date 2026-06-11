@@ -150,6 +150,16 @@ button {
   display: none !important;
 }
 
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 0.85; }
+}
+.skeleton {
+  background: var(--surface-2);
+  border-radius: 8px;
+  animation: skeleton-pulse 1.2s ease-in-out infinite;
+}
+
 @keyframes bounce-in {
   0%   { transform: scale(0); }
   60%  { transform: scale(1.2); }

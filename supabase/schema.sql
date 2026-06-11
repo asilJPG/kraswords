@@ -44,10 +44,23 @@ create trigger crosswords_touch
 create table if not exists public.profiles (
   id         uuid references auth.users on delete cascade primary key,
   username   text unique check (char_length(username) between 2 and 20),
-  role       text not null default 'user' check (role in ('user', 'admin')),
   banner_url text,
   created_at timestamptz not null default now()
 );
+
+-- Admin role lives in a separate table so the list of admins isn't readable
+-- by everyone via profiles SELECT. RLS lets a user see only their own row.
+create table if not exists public.admin_users (
+  user_id    uuid primary key references auth.users on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+alter table public.admin_users enable row level security;
+
+drop policy if exists "read_own_admin" on public.admin_users;
+create policy "read_own_admin" on public.admin_users
+  for select to authenticated
+  using (user_id = auth.uid());
 
 -- Storage bucket for profile banners (run separately in Supabase Dashboard → Storage)
 -- insert into storage.buckets (id, name, public) values ('banners', 'banners', true);
@@ -104,7 +117,7 @@ drop policy if exists "admin_insert" on public.crosswords;
 create policy "admin_insert" on public.crosswords
   for insert to authenticated
   with check (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    exists (select 1 from public.admin_users where user_id = auth.uid())
   );
 
 drop policy if exists "auth_update" on public.crosswords;
@@ -112,10 +125,10 @@ drop policy if exists "admin_update" on public.crosswords;
 create policy "admin_update" on public.crosswords
   for update to authenticated
   using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    exists (select 1 from public.admin_users where user_id = auth.uid())
   )
   with check (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    exists (select 1 from public.admin_users where user_id = auth.uid())
   );
 
 drop policy if exists "auth_delete" on public.crosswords;
@@ -123,7 +136,7 @@ drop policy if exists "admin_delete" on public.crosswords;
 create policy "admin_delete" on public.crosswords
   for delete to authenticated
   using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    exists (select 1 from public.admin_users where user_id = auth.uid())
   );
 
 -- ============================================================

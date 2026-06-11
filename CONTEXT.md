@@ -2,7 +2,7 @@
 
 Файл обновляется при каждом `git push`. Если открыл на другом компе — читай этот файл первым после `git pull`.
 
-Last update: 2026-06-11 (Cleanup: crosswords.ts, admin CSS variables, username length constraints with exceptions)
+Last update: 2026-06-11 (Security hardening: admin_users table, import endpoint, navigation perf + skeletons)
 
 ---
 
@@ -50,7 +50,8 @@ src/
 │       ├── resolve-login/route.ts  (email или username → email, generic 401 на любую неудачу)
 │       ├── setup-profile/route.ts  (server-side validation + insert)
 │       ├── update-profile/route.ts (PATCH avatar/etc — jsonb)
-│       └── upload-banner/route.ts
+│       ├── upload-banner/route.ts
+│       └── admin/import-crossword/route.ts (POST для bulk import через Bearer токен)
 │
 └── proxy.ts — корневой middleware (Next 16: proxy)
 ```
@@ -61,6 +62,7 @@ src/
 NEXT_PUBLIC_SUPABASE_URL=https://rpxowoodkjdjhouppiky.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=…
 SUPABASE_SERVICE_ROLE_KEY=…  ← КРИТИЧНО, без него API крашатся
+IMPORT_API_KEY=…              ← для bulk import кроссвордов через POST (опционально)
 ```
 
 `ADMIN_EMAILS` НЕ нужен — переключились на `profiles.role`.
@@ -74,12 +76,14 @@ SUPABASE_SERVICE_ROLE_KEY=…  ← КРИТИЧНО, без него API кра�
 4. `supabase/migrations/002_profile_avatar.sql` (jsonb avatar column)
 5. `supabase/migrations/003_crossword_theme_custom.sql` (theme_custom для кастомных палитр)
 6. `supabase/migrations/004_crosswords_admin_only.sql` (RLS на crosswords — только admin может писать; критичный security fix)
+7. `supabase/migrations/005_admin_users_table.sql` (роли вынесены в admin_users; profiles.role удалена; список админов больше не утекает)
 
 Storage bucket `banners` — создаётся вручную в Supabase Dashboard → Storage (политики раскомментированы в schema.sql).
 
-**Назначить себя админом:**
+**Назначить себя админом (после миграции 005):**
 ```sql
-update profiles set role = 'admin' where username = '<твой_ник>';
+insert into public.admin_users (user_id)
+select id from public.profiles where username = '<твой_ник>';
 ```
 
 **Обновить ограничение юзернеймов до 4-20 символов с исключениями ('1', '2', 'a'):**
@@ -111,6 +115,12 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_check CHECK ((char_
 - ✅ Удалена `/events` страница (mockEvents больше нет)
 - ✅ Переведен хардкод цветов на CSS-переменные в 7 файлах админки (с сохранением необходимых сигнальных цветов в ячейках)
 - ✅ Юзернеймы обычных пользователей ограничены 4–20 символами, с поддержкой коротких исключений ('1', '2', 'a') на клиенте, сервере и в БД
+- ✅ Server-side валидация шейпа/размера в `/api/game-result` (50KB) и `/api/admin/crosswords` POST (200KB, полная схема clues)
+- ✅ Роли вынесены в `admin_users` (мигр. 005) — список админов больше не утекает через `select role from profiles`
+- ✅ Bulk import endpoint `/api/admin/import-crossword` (Bearer токен IMPORT_API_KEY, до 50 кроссвордов за раз)
+- ✅ Profile показывает заголовок кроссворда (через embedded join) вместо технического slug
+- ✅ Proxy оптимизирован: skip `/api/*` и публичных страниц (нет сетевого `getUser()` на главной и /top → ~150ms на навигацию)
+- ✅ Loading skeletons (`loading.tsx`) для `/profile`, `/admin`, `/top`, `/play/[id]` — мгновенный отклик навигации
 
 ## Известные мелочи / pending
 

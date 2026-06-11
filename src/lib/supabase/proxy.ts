@@ -7,6 +7,20 @@ const PROTECTED_PREFIXES = ['/play', '/profile']
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request })
 
+  const pathname = request.nextUrl.pathname
+  const isAdminRoute = pathname.startsWith('/admin')
+  const isProtectedRoute = PROTECTED_PREFIXES.some(p => pathname.startsWith(p))
+  const isLoginRoute = pathname === '/login'
+  const isSetupRoute = pathname === '/setup-profile'
+  const isApiRoute = pathname.startsWith('/api')
+
+  // Fast path: anonymous-friendly routes (/, /top, etc.) skip the auth network call.
+  // We only need user identity to gate /admin, /profile, /play, /login, /setup-profile.
+  const needsAuthCheck = isAdminRoute || isProtectedRoute || isLoginRoute || isSetupRoute
+  if (!needsAuthCheck) {
+    return response
+  }
+
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -30,13 +44,6 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const pathname = request.nextUrl.pathname
-  const isAdminRoute = pathname.startsWith('/admin')
-  const isProtectedRoute = PROTECTED_PREFIXES.some(p => pathname.startsWith(p))
-  const isLoginRoute = pathname === '/login'
-  const isSetupRoute = pathname === '/setup-profile'
-  const isApiRoute = pathname.startsWith('/api')
-
   // not logged in → login (except setup-profile which we handle separately)
   if ((isAdminRoute || isProtectedRoute) && !user) {
     const url = request.nextUrl.clone()
@@ -54,33 +61,40 @@ export async function updateSession(request: NextRequest) {
   const hasProfileCookie = request.cookies.get('has_profile')?.value === 'true'
   const roleCookie = request.cookies.get('user_role')?.value
 
-  // Single profile lookup for both username + role
-  let profile: { username: string | null; role: string | null } | null = null
-  let needDbCheck = false
+  // Query username (from profiles) and admin flag (from admin_users) only when needed.
+  let usernameFromDb: string | null = null
+  let adminFromDb: boolean | null = null
 
-  // We only query DB if:
-  // 1. We are accessing admin route (to double check role securely)
-  // 2. Or user is logged in, but doesn't have the has_profile cookie or role cookie yet
   if (user && !isApiRoute) {
-    if (isAdminRoute || !hasProfileCookie || !roleCookie) {
-      needDbCheck = true
+    const needUsername = !hasProfileCookie || isAdminRoute
+    const needAdmin = isAdminRoute || !roleCookie
+
+    if (needUsername) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase.from('profiles') as any)
+        .select('username')
+        .eq('id', user.id)
+        .maybeSingle()
+      usernameFromDb = data?.username ?? null
+    }
+
+    if (needAdmin) {
+      // admin_users RLS lets users see only their own row → exact check
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase.from('admin_users') as any)
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      adminFromDb = !!data
     }
   }
 
-  if (needDbCheck && user) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase.from('profiles') as any)
-      .select('username, role')
-      .eq('id', user.id)
-      .single()
-    profile = data ?? null
-  }
-
+  // For admin routes always trust DB; otherwise fall back to cookie cache
   const isAdmin = isAdminRoute
-    ? profile?.role === 'admin'
-    : (roleCookie === 'admin' || profile?.role === 'admin')
+    ? adminFromDb === true
+    : (adminFromDb === true || roleCookie === 'admin')
 
-  const hasUsername = hasProfileCookie || !!profile?.username
+  const hasUsername = hasProfileCookie || !!usernameFromDb
 
   // logged in but not an admin → can't access /admin/*
   if (isAdminRoute && user && !isAdmin) {
@@ -105,13 +119,16 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Set cookies to cache role and profile status in response
-  if (user && profile && !isApiRoute) {
-    if (profile.username && !hasProfileCookie) {
+  // Cache username + admin flag in cookies for next request
+  if (user && !isApiRoute) {
+    if (usernameFromDb && !hasProfileCookie) {
       response.cookies.set('has_profile', 'true', { path: '/', maxAge: 60 * 60 * 24 * 30 })
     }
-    if (profile.role && roleCookie !== profile.role) {
-      response.cookies.set('user_role', profile.role, { path: '/', maxAge: 60 * 60 * 24 * 30 })
+    if (adminFromDb !== null) {
+      const desired = adminFromDb ? 'admin' : 'user'
+      if (roleCookie !== desired) {
+        response.cookies.set('user_role', desired, { path: '/', maxAge: 60 * 60 * 24 * 30 })
+      }
     }
   }
 
