@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CrosswordData, Cell, Direction } from '@/lib/crossword/types'
 import { verifyAnswers } from '@/lib/crosswords'
+import { findCluesForCell, getCellsForClue } from '@/lib/crossword/clue-utils'
 
 interface Params {
   crossword: CrosswordData
@@ -32,18 +33,16 @@ export function useCrosswordInput({
   )
 
   const advanceCaret = useCallback((row: number, col: number) => {
-    const size = crossword.size
     const dir = directionRef.current
-    if (dir === 'across') {
-      let nc = col + 1
-      while (nc < size && cells[row][nc].isBlack) nc++
-      if (nc < size) moveSelected(row, nc)
-    } else {
-      let nr = row + 1
-      while (nr < size && cells[nr]?.[col]?.isBlack) nr++
-      if (nr < size) moveSelected(nr, col)
+    const clue = findCluesForCell(crossword.clues, row, col).find(c => c.direction === dir)
+    if (!clue) return
+    const clueCells = getCellsForClue(clue)
+    const idx = clueCells.findIndex(([r, c]) => r === row && c === col)
+    if (idx >= 0 && idx < clueCells.length - 1) {
+      const [nr, nc] = clueCells[idx + 1]
+      moveSelected(nr, nc)
     }
-  }, [directionRef, cells, crossword.size, moveSelected])
+  }, [directionRef, crossword.clues, moveSelected])
 
   const writeLetter = useCallback((letter: string) => {
     if (!selected) return
@@ -81,7 +80,7 @@ export function useCrosswordInput({
   // physical keyboard
   const handleKey = useCallback((e: KeyboardEvent) => {
     if (!selected) return
-    if (e.target === hiddenInputRef.current && /^[а-яёА-ЯЁa-zA-Z]$/.test(e.key)) return
+    if (e.target === hiddenInputRef.current) return
 
     if (e.key === 'Backspace') { handleBackspace(); return }
     if (/^[а-яёА-ЯЁa-zA-Z]$/.test(e.key)) writeLetter(e.key.toUpperCase())

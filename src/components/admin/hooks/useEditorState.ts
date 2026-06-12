@@ -5,7 +5,6 @@ import type { Direction } from '@/lib/crossword/types'
 export interface CrosswordMeta {
   id: string
   title: string
-  author: string
   emoji: string
   category: string
   difficulty: 'лёгкий' | 'средний' | 'сложный'
@@ -18,7 +17,6 @@ export interface CrosswordMeta {
 const defaultMeta: CrosswordMeta = {
   id: '',
   title: '',
-  author: 'аноним',
   emoji: '🧩',
   category: 'разное',
   difficulty: 'средний',

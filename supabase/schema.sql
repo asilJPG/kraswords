@@ -6,7 +6,6 @@
 create table if not exists public.crosswords (
   id          text primary key,
   title       text not null,
-  author      text not null default 'аноним',
   emoji       text not null default '🧩',
   category    text not null default 'разное',
   difficulty  text not null default 'средний' check (difficulty in ('лёгкий', 'средний', 'сложный')),

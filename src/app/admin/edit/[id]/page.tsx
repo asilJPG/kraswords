@@ -21,7 +21,6 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
   const meta: Partial<CrosswordMeta> = {
     id: data.id,
     title: data.title,
-    author: data.author,
     emoji: data.emoji,
     category: data.category,
     difficulty: data.difficulty,

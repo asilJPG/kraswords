@@ -2,7 +2,7 @@
 
 Файл обновляется при каждом `git push`. Если открыл на другом компе — читай этот файл первым после `git pull`.
 
-Last update: 2026-06-11 (Security hardening: admin_users table, import endpoint, navigation perf + skeletons)
+Last update: 2026-06-12 (Drop author, guest play, top tabs+pagination, clue sort, effects memo, input fixes)
 
 ---
 
@@ -77,6 +77,7 @@ IMPORT_API_KEY=…              ← для bulk import кроссвордов ч
 5. `supabase/migrations/003_crossword_theme_custom.sql` (theme_custom для кастомных палитр)
 6. `supabase/migrations/004_crosswords_admin_only.sql` (RLS на crosswords — только admin может писать; критичный security fix)
 7. `supabase/migrations/005_admin_users_table.sql` (роли вынесены в admin_users; profiles.role удалена; список админов больше не утекает)
+8. `supabase/migrations/006_drop_author_column.sql` (удалена неиспользуемая колонка author из crosswords)
 
 Storage bucket `banners` — создаётся вручную в Supabase Dashboard → Storage (политики раскомментированы в schema.sql).
 
@@ -121,13 +122,13 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_check CHECK ((char_
 - ✅ Profile показывает заголовок кроссворда (через embedded join) вместо технического slug
 - ✅ Proxy оптимизирован: skip `/api/*` и публичных страниц (нет сетевого `getUser()` на главной и /top → ~150ms на навигацию)
 - ✅ Loading skeletons (`loading.tsx`) для `/profile`, `/admin`, `/top`, `/play/[id]` — мгновенный отклик навигации
+- ✅ Дропнута колонка `author` из crosswords (миграция 006, убрана из типов/API/редактора/seed)
+- ✅ Гостевая игра: `/play` доступен без логина, после решения — CTA «войди, чтобы сохранить результат»
 
 ## Известные мелочи / pending
 
 - [ ] **Cell/ClueBanner/GameControls/CrosswordList** — themed по теме кроссворда (Рик и Морти, etc), не light/dark. By design — НЕ трогать.
 - [ ] **gameHistory.ts** — у залогиненных `ResultSheet` всё ещё читает прогресс ачивок из localStorage. Чистить когда переходим на server-side achievements (когда ачивки начнут давать привилегии).
-- [ ] **Колонка `author` в БД** — оставлена с дефолтом 'аноним'. Дропать миграцией когда захочешь.
-- [ ] **Старые баннеры** в БД были 600×200 — после фикса canvas 1600×540 они выглядят размытыми. Перерисовать или скрипт обновить.
 
 ## Отложено на post-launch
 
@@ -139,6 +140,7 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_check CHECK ((char_
 - Server-side achievements (когда ачивки начнут давать реальные привилегии)
 - Forgot password / email verification callback
 - OG image / favicon / реальный домен
+- Custom SMTP + русские email-шаблоны (Resend/Mailgun, нужен свой домен; Site URL уже настроен на прод)
 
 ## Запуск локально
 

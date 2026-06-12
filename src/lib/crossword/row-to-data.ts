@@ -6,7 +6,6 @@ export function rowToCrosswordData(row: CrosswordRow): CrosswordData {
   return {
     id: row.id,
     title: row.title,
-    author: row.author,
     date: row.created_at?.slice(0, 10) ?? '',
     difficulty: row.difficulty,
     emoji: row.emoji,

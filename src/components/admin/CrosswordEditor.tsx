@@ -47,7 +47,6 @@ export default function CrosswordEditor({ draftId, initialMeta, initialWords }: 
     return {
       id: s.meta.id || 'preview',
       title: s.meta.title || 'Предпросмотр кроссворда',
-      author: s.meta.author || 'аноним',
       date: new Date().toISOString().slice(0, 10),
       difficulty: s.meta.difficulty,
       emoji: s.meta.emoji,
@@ -104,7 +103,6 @@ export default function CrosswordEditor({ draftId, initialMeta, initialWords }: 
       await saveCrossword({
         id: s.meta.id,
         title: s.meta.title,
-        author: s.meta.author,
         emoji: s.meta.emoji,
         category: s.meta.category,
         difficulty: s.meta.difficulty,

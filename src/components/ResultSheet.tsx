@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import BottomSheet from './BottomSheet'
 import { ACHIEVEMENTS, getAchievementProgress } from '@/lib/gameHistory'
 
@@ -10,6 +11,7 @@ interface Props {
   time: number
   rank: number | null
   crosswordTitle: string
+  isLoggedIn?: boolean
 }
 
 function fmt(s: number) {
@@ -56,7 +58,7 @@ function Confetti() {
 }
 
 export default function ResultSheet({
-  open, onClose, time, rank, crosswordTitle,
+  open, onClose, time, rank, crosswordTitle, isLoggedIn = true,
 }: Props) {
   const [progress, setProgress] = useState<Record<string, number>>({})
   const [stage, setStage] = useState(0)
@@ -175,6 +177,42 @@ export default function ResultSheet({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Auth CTA for guests */}
+        {!isLoggedIn && (
+          <div style={{
+            position: 'relative', zIndex: 1,
+            marginTop: '22px',
+            padding: '16px',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: '14px',
+            textAlign: 'center',
+            opacity: stage >= 2 ? 1 : 0,
+            transform: stage >= 2 ? 'translateY(0)' : 'translateY(10px)',
+            transition: 'all 0.4s ease-out',
+          }}>
+            <p style={{ fontSize: '14px', color: 'var(--text)', fontWeight: 600, marginBottom: '4px' }}>
+              войди, чтобы сохранить результат
+            </p>
+            <p style={{ fontSize: '12px', color: 'var(--text-light)', marginBottom: '14px' }}>
+              твоё время попадёт в таблицу лидеров
+            </p>
+            <Link href="/login" style={{
+              display: 'inline-block',
+              padding: '10px 28px',
+              background: 'linear-gradient(135deg, #4f46e5, #4338ca)',
+              color: '#fff',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontWeight: 700,
+              textDecoration: 'none',
+              boxShadow: '0 4px 14px rgba(79, 70, 229, 0.35)',
+            }}>
+              войти или создать аккаунт
+            </Link>
           </div>
         )}
 

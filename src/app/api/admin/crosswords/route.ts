@@ -27,9 +27,6 @@ function validateCrossword(row: unknown): { ok: true; row: CrosswordInsert } | {
   if (typeof r.title !== 'string' || r.title.length < 1 || r.title.length > 120) {
     return { ok: false, error: 'title: 1-120 символов' }
   }
-  if (typeof r.author !== 'string' || r.author.length > 60) {
-    return { ok: false, error: 'author: до 60 символов' }
-  }
   if (typeof r.emoji !== 'string' || r.emoji.length > 10) {
     return { ok: false, error: 'emoji: до 10 символов' }
   }

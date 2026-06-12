@@ -70,8 +70,8 @@ interface Props {
 }
 
 export default function CluesList({ clues, activeClue, theme, isMobile, onSelectClue }: Props) {
-  const across = clues.filter(c => c.direction === 'across')
-  const down = clues.filter(c => c.direction === 'down')
+  const across = clues.filter(c => c.direction === 'across').sort((a, b) => a.number - b.number)
+  const down = clues.filter(c => c.direction === 'down').sort((a, b) => a.number - b.number)
   return (
     <div style={{
       flex: 1,

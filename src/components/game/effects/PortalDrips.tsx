@@ -1,14 +1,16 @@
+import { useMemo } from 'react'
 import type { ThemeConfig } from '@/lib/crossword/types'
 
 export default function PortalDrips({ theme }: { theme: ThemeConfig }) {
   if (theme.id !== 'rickmorty' && theme.effect !== 'portal-drips') return null
-  const drips = Array(10).fill(0).map(() => ({
+
+  const drips = useMemo(() => Array(10).fill(0).map(() => ({
     left: Math.random() * 100,
     delay: Math.random() * 10,
     duration: 5 + Math.random() * 4,
     width: 2 + Math.random() * 2,
     height: 30 + Math.random() * 60,
-  }))
+  })), [])
 
   return (
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>

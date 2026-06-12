@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { fetchCrosswordById } from '@/lib/crossword/server-api'
+import { createClient } from '@/lib/supabase/server'
 import CrosswordGame from '@/components/CrosswordGame'
 
 export default async function PlayPage({ params }: { params: Promise<{ id: string }> }) {
@@ -7,5 +8,8 @@ export default async function PlayPage({ params }: { params: Promise<{ id: strin
   const crossword = await fetchCrosswordById(id)
   if (!crossword) notFound()
 
-  return <CrosswordGame crossword={crossword} />
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  return <CrosswordGame crossword={crossword} isLoggedIn={!!user} />
 }

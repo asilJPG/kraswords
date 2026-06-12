@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from './types'
 
-const PROTECTED_PREFIXES = ['/play', '/profile']
+const PROTECTED_PREFIXES = ['/profile']
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request })

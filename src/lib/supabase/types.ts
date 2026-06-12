@@ -3,7 +3,6 @@ import type { Clue } from '@/lib/crossword/types'
 export interface CrosswordRow {
   id: string
   title: string
-  author: string
   emoji: string
   category: string
   difficulty: 'лёгкий' | 'средний' | 'сложный'

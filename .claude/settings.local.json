@@ -26,9 +26,11 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code} %{redirect_url}\\\\n\" http://localhost:3000/admin)",
       "Bash(curl -s -o /dev/null -w \"%{http_code} %{redirect_url}\\\\n\" http://localhost:3000/profile)",
       "Bash(curl -s -X POST http://localhost:3000/api/resolve-login -H 'Content-Type: application/json' -d '{\"login\":\"nosuchuser_zzz\"}')",
-      "Bash(git commit -m ' *)",
+      "Bash(git commit *)",
       "Bash(git push *)",
-      "Bash(git commit -m 'docs: add CONTEXT.md for cross-device continuity *)"
+      "Bash(tasklist)",
+      "Bash(taskkill *)",
+      "Bash(npm run *)"
     ]
   }
 }

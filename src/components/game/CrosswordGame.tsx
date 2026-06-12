@@ -25,7 +25,7 @@ import { useHideMainNav } from './hooks/useHideMainNav'
 import { useCellSelection } from './hooks/useCellSelection'
 import { useCrosswordInput } from './hooks/useCrosswordInput'
 
-export default function CrosswordGame({ crossword }: { crossword: CrosswordData }) {
+export default function CrosswordGame({ crossword, isLoggedIn = true }: { crossword: CrosswordData; isLoggedIn?: boolean }) {
   useHideMainNav()
   const [sheetOpen, setSheetOpen] = useState(false)
   const [rank, setRank] = useState<number | null>(null)
@@ -54,14 +54,16 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
     onSolved: (answers) => {
       const t = timerRef.current
       saveGame({ crosswordId: crossword.id, time: t, date: new Date().toISOString(), solved: true })
-      fetch('/api/game-result', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ crossword_id: crossword.id, time_seconds: t, answers }),
-      })
-        .then(r => r.json())
-        .then(d => { if (d.rank) setRank(d.rank) })
-        .catch(() => null)
+      if (isLoggedIn) {
+        fetch('/api/game-result', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ crossword_id: crossword.id, time_seconds: t, answers }),
+        })
+          .then(r => r.json())
+          .then(d => { if (d.rank) setRank(d.rank) })
+          .catch(() => null)
+      }
       setSheetOpen(true)
     },
   })
@@ -196,6 +198,7 @@ export default function CrosswordGame({ crossword }: { crossword: CrosswordData 
         time={timer}
         rank={rank}
         crosswordTitle={crossword.title}
+        isLoggedIn={isLoggedIn}
       />
     </div>
   )

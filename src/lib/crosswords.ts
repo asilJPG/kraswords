@@ -37,7 +37,6 @@ export interface ThemeConfig {
 export interface CrosswordData {
   id: string
   title: string
-  author: string
   date: string
   difficulty: 'лёгкий' | 'средний' | 'сложный'
   emoji: string
