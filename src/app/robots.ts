@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://xn--80ahegq7axd.com' // Punycode для красвордс.com
+  const baseUrl = 'https://xn--80aegvwjdfe.com' // Punycode для красвордс.com
   return {
     rules: {
       userAgent: '*',

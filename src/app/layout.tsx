@@ -15,14 +15,14 @@ export const metadata: Metadata = {
   description: 'Разгадывайте бесплатные тематические кроссворды онлайн. Играйте с компьютера или телефона, соревнуйтесь в скорости решения и попадайте в топ игроков!',
   keywords: ['кроссворды', 'кроссворды онлайн', 'красвордс', 'бесплатные кроссворды', 'игры разума', 'умные игры', 'головоломки', 'кроссворды на телефоне'],
   authors: [{ name: 'Красвордс' }],
-  metadataBase: new URL('https://xn--80ahegq7axd.com'),
+  metadataBase: new URL('https://xn--80aegvwjdfe.com'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'Красвордс — умные тематические кроссворды онлайн',
     description: 'Разгадывайте бесплатные тематические кроссворды онлайн. Играйте и побеждайте в лиге лидеров!',
-    url: 'https://xn--80ahegq7axd.com',
+    url: 'https://xn--80aegvwjdfe.com',
     siteName: 'Красвордс',
     locale: 'ru_RU',
     type: 'website',
