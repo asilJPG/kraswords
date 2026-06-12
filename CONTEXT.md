@@ -2,7 +2,7 @@
 
 Файл обновляется при каждом `git push`. Если открыл на другом компе — читай этот файл первым после `git pull`.
 
-Last update: 2026-06-12 (Drop author, guest play, top tabs+pagination, clue sort, effects memo, input fixes)
+Last update: 2026-06-12 (SEO optimization: robots.ts, sitemap.ts, metadata Base, custom favicon & google site verification)
 
 ---
 
@@ -124,6 +124,8 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_check CHECK ((char_
 - ✅ Loading skeletons (`loading.tsx`) для `/profile`, `/admin`, `/top`, `/play/[id]` — мгновенный отклик навигации
 - ✅ Дропнута колонка `author` из crosswords (миграция 006, убрана из типов/API/редактора/seed)
 - ✅ Гостевая игра: `/play` доступен без логина, после решения — CTA «войди, чтобы сохранить результат»
+- ✅ SEO-оптимизация: добавлены `robots.ts` и `sitemap.ts` для индексации кроссвордов, настроены rich-метаданные и заглушка верификации домена в `layout.tsx`.
+- ✅ Кастомная иконка сайта: удален дефолтный `favicon.ico` от Vercel и создана новая SVG-иконка.
 
 ## Известные мелочи / pending
 
