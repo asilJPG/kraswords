@@ -32,6 +32,10 @@ export interface ThemeConfig {
   particleColor?: string
   glowColor?: string
   effect?: string
+  heroImage?: {
+    wide: string      // desktop landscape (~1920×800)
+    portrait: string  // mobile portrait (~1400×1700)
+  }
 }
 
 export interface CrosswordData {
@@ -88,6 +92,10 @@ export const themes: Record<string, ThemeConfig> = {
     fontFamily: '"Courier New", monospace',
     particleColor: '#39ff14',
     glowColor: '#39ff14',
+    heroImage: {
+      wide: '/heroes/rickmorty-wide.jpg',
+      portrait: '/heroes/rickmorty-portrait.jpg',
+    },
   },
   harrypotter: {
     id: 'harrypotter',

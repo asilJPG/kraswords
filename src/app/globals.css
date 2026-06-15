@@ -150,6 +150,19 @@ button {
   display: none !important;
 }
 
+/* FeaturedCard responsive hero swap */
+.featured-card .featured-hero-portrait {
+  display: none;
+}
+@media (max-width: 640px) {
+  .featured-card .featured-hero-wide {
+    display: none;
+  }
+  .featured-card .featured-hero-portrait {
+    display: block;
+  }
+}
+
 @keyframes skeleton-pulse {
   0%, 100% { opacity: 0.5; }
   50%      { opacity: 0.85; }

@@ -1,4 +1,5 @@
 import CrosswordList from '@/components/CrosswordList'
+import FeaturedCard from '@/components/FeaturedCard'
 import Link from 'next/link'
 import { fetchPublishedCrosswords } from '@/lib/crossword/server-api'
 
@@ -38,77 +39,7 @@ export default async function Home() {
       </div>
 
       {/* featured / main crossword */}
-      <Link href={`/play/${featured.id}`}>
-        <div className="card-hover animate-fade-in" style={{
-          background: featured.theme.bgImage || featured.theme.bg,
-          borderRadius: '20px',
-          padding: '28px 24px',
-          marginBottom: '36px',
-          position: 'relative',
-          overflow: 'hidden',
-          cursor: 'pointer',
-          border: `1px solid ${featured.theme.accentColor}30`,
-          boxShadow: featured.theme.glowColor
-            ? `0 4px 30px ${featured.theme.glowColor}20`
-            : '0 2px 8px rgba(0,0,0,0.06)',
-        }}>
-          {featured.theme.glowColor && (
-            <div style={{
-              position: 'absolute',
-              top: '-20%',
-              right: '-10%',
-              width: '200px',
-              height: '200px',
-              borderRadius: '50%',
-              background: `radial-gradient(circle, ${featured.theme.glowColor}15 0%, transparent 70%)`,
-              pointerEvents: 'none',
-            }} />
-          )}
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{
-              fontSize: '11px',
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '1.5px',
-              color: featured.theme.accentColor,
-              marginBottom: '12px',
-            }}>
-              кроссворд дня
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '28px' }}>{featured.emoji}</span>
-              <h2 style={{
-                fontSize: '22px',
-                fontWeight: 700,
-                color: featured.theme.textColor,
-                fontFamily: featured.theme.fontFamily || 'inherit',
-              }}>
-                {featured.title}
-              </h2>
-            </div>
-            <p style={{
-              fontSize: '13px',
-              color: featured.theme.mutedColor,
-              marginBottom: '16px',
-            }}>
-              {featured.category} · {featured.wordCount} слов
-            </p>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 16px',
-              borderRadius: '10px',
-              background: featured.theme.accentColor + '20',
-              color: featured.theme.accentColor,
-              fontSize: '13px',
-              fontWeight: 600,
-            }}>
-              играть →
-            </div>
-          </div>
-        </div>
-      </Link>
+      <FeaturedCard crossword={featured} />
 
       {/* top by visits */}
       <div style={{ marginBottom: '36px' }} className="animate-fade-in">
