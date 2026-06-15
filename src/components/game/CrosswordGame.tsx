@@ -11,6 +11,10 @@ import ResultSheet from '@/components/ResultSheet'
 import Particles from './effects/Particles'
 import PortalDrips from './effects/PortalDrips'
 import MagicSparkles from './effects/MagicSparkles'
+import Stars from './effects/Stars'
+import Rain from './effects/Rain'
+import Lightning from './effects/Lightning'
+import CornerObject from './CornerObject'
 
 import HiddenInput from './HiddenInput'
 import GameNav from './GameNav'
@@ -106,6 +110,10 @@ export default function CrosswordGame({ crossword, isLoggedIn = true }: { crossw
       <Particles theme={theme} />
       <PortalDrips theme={theme} />
       <MagicSparkles theme={theme} />
+      <Stars theme={theme} />
+      <Rain theme={theme} />
+      <Lightning theme={theme} />
+      <CornerObject theme={theme} />
 
       <GameNav
         theme={theme}

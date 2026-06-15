@@ -31,6 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             красвордс <span style={{ color: 'var(--text-light)', fontWeight: 400 }}>· админ</span>
           </Link>
           <Link href="/admin" style={navLink}>кроссворды</Link>
+          <Link href="/admin/themes" style={navLink}>темы</Link>
           <Link href="/admin/new" style={navLink}>+ новый</Link>
           <Link href="/" style={{ ...navLink, marginLeft: 'auto' }}>← на сайт</Link>
           <span style={{ fontSize: '12px', color: 'var(--text-light)' }}>{user.email}</span>

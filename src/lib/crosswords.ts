@@ -36,6 +36,12 @@ export interface ThemeConfig {
     wide: string      // desktop landscape (~1920×800)
     portrait: string  // mobile portrait (~1400×1700)
   }
+  cornerObject?: {
+    imageUrl: string                                        // PNG with transparent bg
+    position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+    size?: number                                           // px, default 120
+    animation?: 'none' | 'float' | 'pulse'                  // optional bobbing
+  }
 }
 
 export interface CrosswordData {
