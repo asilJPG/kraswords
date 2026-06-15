@@ -26,11 +26,11 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code} %{redirect_url}\\\\n\" http://localhost:3000/admin)",
       "Bash(curl -s -o /dev/null -w \"%{http_code} %{redirect_url}\\\\n\" http://localhost:3000/profile)",
       "Bash(curl -s -X POST http://localhost:3000/api/resolve-login -H 'Content-Type: application/json' -d '{\"login\":\"nosuchuser_zzz\"}')",
-      "Bash(git commit *)",
+      "Bash(git commit -m ' *)",
       "Bash(git push *)",
-      "Bash(tasklist)",
-      "Bash(taskkill *)",
-      "Bash(npm run *)"
+      "Bash(git commit -m 'docs: add CONTEXT.md for cross-device continuity *)",
+      "Bash(grep -v \":0$\")",
+      "Bash(git commit -m 'fix\\(security\\): валидация шейпа и размера в /api/game-result и /api/admin/crosswords *)"
     ]
   }
 }

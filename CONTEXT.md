@@ -2,7 +2,7 @@
 
 Файл обновляется при каждом `git push`. Если открыл на другом компе — читай этот файл первым после `git pull`.
 
-Last update: 2026-06-12 (SEO optimization: robots.ts, sitemap.ts, metadata Base, custom favicon & google site verification)
+Last update: 2026-06-15 (themes & decorations system WIP, hero card, visual effects)
 
 ---
 
@@ -28,8 +28,8 @@ src/
 │   └── gameHistory.ts — localStorage achievements + история игр (legacy, мигрировать когда нужно)
 │
 ├── components/
-│   ├── game/          — CrosswordGame (~200 строк) + Grid/Cell/CluesList/ClueBanner/GameNav/GameControls/HiddenInput + effects/* + hooks/*
-│   ├── admin/         — CrosswordEditor + EditorGrid/EditorCell/WordList/AddWordForm/MetaForm/PublishToggle/DeleteButton/LogoutButton/HideMainNav + hooks
+│   ├── game/          — CrosswordGame (~200 строк) + Grid/Cell/CluesList/ClueBanner/GameNav/GameControls/HiddenInput + CornerObject + effects/* + hooks/*
+│   ├── admin/         — CrosswordEditor + EditorGrid/EditorCell/WordList/AddWordForm/MetaForm/PublishToggle/DeleteButton/LogoutButton/HideMainNav + ThemeEditor/ThemeForm/ThemeDeleteButton/ImageUploader + hooks
 │   ├── profile/       — BannerEditor, AvatarPicker
 │   ├── login/         — LoginForm
 │   ├── BottomSheet, ResultSheet, EventBanner, CrosswordList, Nav, ThemeToggle, ConfirmDialog
@@ -38,7 +38,7 @@ src/
 │   ├── page.tsx (главная, force-dynamic)
 │   ├── play/[id]/page.tsx
 │   ├── login/page.tsx + layout.tsx
-│   ├── admin/{layout, page, new/page, edit/[id]/page}.tsx
+│   ├── admin/{layout, page, new/page, edit/[id]/page, themes/page, themes/new/page, themes/[id]/page}.tsx
 │   ├── profile/{page, ProfileClient}.tsx
 │   ├── setup-profile/{page, SetupForm}.tsx
 │   ├── top/page.tsx
@@ -51,6 +51,8 @@ src/
 │       ├── setup-profile/route.ts  (server-side validation + insert)
 │       ├── update-profile/route.ts (PATCH avatar/etc — jsonb)
 │       ├── upload-banner/route.ts
+│       ├── upload-hero/route.ts        (POST FormData: file+kind → heroes bucket, admins only, ≤1.5MB)
+│       ├── admin/themes/{route, [id]/route}.ts (CRUD для кастомных тем)
 │       └── admin/import-crossword/route.ts (POST для bulk import через Bearer токен)
 │
 └── proxy.ts — корневой middleware (Next 16: proxy)
@@ -78,8 +80,10 @@ IMPORT_API_KEY=…              ← для bulk import кроссвордов ч
 6. `supabase/migrations/004_crosswords_admin_only.sql` (RLS на crosswords — только admin может писать; критичный security fix)
 7. `supabase/migrations/005_admin_users_table.sql` (роли вынесены в admin_users; profiles.role удалена; список админов больше не утекает)
 8. `supabase/migrations/006_drop_author_column.sql` (удалена неиспользуемая колонка author из crosswords)
+9. `supabase/migrations/007_themes_and_decorations.sql` (таблица `themes_custom` + RLS + bucket `heroes`)
 
 Storage bucket `banners` — создаётся вручную в Supabase Dashboard → Storage (политики раскомментированы в schema.sql).
+Storage bucket `heroes` — для hero-изображений и corner-объектов тем (public read, admin upload). Создаётся вручную.
 
 **Назначить себя админом (после миграции 005):**
 ```sql
@@ -126,6 +130,20 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_check CHECK ((char_
 - ✅ Гостевая игра: `/play` доступен без логина, после решения — CTA «войди, чтобы сохранить результат»
 - ✅ SEO-оптимизация: добавлены `robots.ts` и `sitemap.ts` для индексации кроссвордов, настроены rich-метаданные и заглушка верификации домена в `layout.tsx`.
 - ✅ Кастомная иконка сайта: удален дефолтный `favicon.ico` от Vercel и создана новая SVG-иконка.
+- ✅ Hero-карточка «Кроссворд дня» на главной для темы Рик и Морти (коммит `2362d05`)
+
+## 🚧 В процессе (НЕ закоммичено)
+
+Система **тем и декораций** — позволяет админам создавать переиспользуемые визуальные темы:
+
+- **Миграция 007** — таблица `themes_custom` (id, name, config jsonb, RLS admin-only write)
+- **Admin UI** — `/admin/themes` CRUD: список, создание, редактирование (`ThemeEditor`, `ThemeForm`, `ThemeDeleteButton`, `ImageUploader`)
+- **API** — `/api/admin/themes` GET/POST, `/api/admin/themes/[id]` GET/PATCH/DELETE; `/api/upload-hero` для загрузки hero/corner изображений
+- **CornerObject** — плавающий декоративный элемент в игре (позиция, размер, анимация float/pulse)
+- **Эффекты** — `Lightning.tsx`, `Rain.tsx`, `Stars.tsx`, `MagicSparkles.tsx`, `Particles.tsx`, `PortalDrips.tsx` в `src/components/game/effects/`
+- **Изменения в существующих файлах** — `CrosswordGame.tsx` (подключение эффектов/corner), `crosswords.ts` (новые типы тем), `globals.css` (анимации corner-float/corner-pulse), `admin/layout.tsx` (ссылка на /admin/themes)
+
+**Статус:** код написан, но НЕ закоммичен. Миграция 007 НЕ применена на проде. Bucket `heroes` нужно создать вручную.
 
 ## Известные мелочи / pending
 
@@ -141,7 +159,7 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_check CHECK ((char_
 - Пагинация лидерборда (top-10 хардкод)
 - Server-side achievements (когда ачивки начнут давать реальные привилегии)
 - Forgot password / email verification callback
-- OG image / favicon / реальный домен
+- OG image / реальный домен (favicon уже сделан)
 - Custom SMTP + русские email-шаблоны (Resend/Mailgun, нужен свой домен; Site URL уже настроен на прод)
 
 ## Запуск локально
