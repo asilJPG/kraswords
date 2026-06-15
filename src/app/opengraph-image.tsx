@@ -4,10 +4,13 @@ export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
 export default async function Image() {
-  const [latinFont, cyrillicFont] = await Promise.all([
-    fetch('https://fonts.bunny.net/inter/files/inter-latin-700-normal.woff2').then(r => r.arrayBuffer()),
-    fetch('https://fonts.bunny.net/inter/files/inter-cyrillic-700-normal.woff2').then(r => r.arrayBuffer()),
+  const fonts = await Promise.all([
+    fetch('https://fonts.bunny.net/inter/files/inter-latin-700-normal.woff2').then(r => r.arrayBuffer()).catch(() => null),
+    fetch('https://fonts.bunny.net/inter/files/inter-cyrillic-700-normal.woff2').then(r => r.arrayBuffer()).catch(() => null),
   ])
+  const loadedFonts = fonts.flatMap((data) =>
+    data ? [{ name: 'Inter', data, style: 'normal' as const, weight: 700 as const }] : []
+  )
 
   return new ImageResponse(
     (
@@ -47,10 +50,7 @@ export default async function Image() {
     ),
     {
       ...size,
-      fonts: [
-        { name: 'Inter', data: latinFont, style: 'normal', weight: 700 },
-        { name: 'Inter', data: cyrillicFont, style: 'normal', weight: 700 },
-      ],
+      fonts: loadedFonts,
     }
   )
 }

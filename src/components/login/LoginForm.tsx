@@ -45,13 +45,8 @@ export default function LoginForm() {
     if (mode === 'register') {
       const trimmedUsername = username.trim()
       const exceptions = ['1', '2', 'a']
-      if (trimmedUsername.length < 4 && !exceptions.includes(trimmedUsername)) {
-        setError('Юзернейм: минимум 4 символа')
-        setLoading(false)
-        return
-      }
-      if (trimmedUsername.length < 1 || trimmedUsername.length > 20) {
-        setError('Юзернейм: 1–20 символов')
+      if ((trimmedUsername.length < 4 && !exceptions.includes(trimmedUsername)) || trimmedUsername.length > 20) {
+        setError('Юзернейм: 4–20 символов')
         setLoading(false)
         return
       }
@@ -117,13 +112,17 @@ export default function LoginForm() {
       return
     }
     if (data.user) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: profile } = await (supabase.from('profiles') as any)
-        .select('username').eq('id', data.user.id).single()
-      if (!profile) {
-        router.push('/setup-profile')
-        router.refresh()
-        return
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: profile } = await (supabase.from('profiles') as any)
+          .select('username').eq('id', data.user.id).single()
+        if (!profile) {
+          router.push('/setup-profile')
+          router.refresh()
+          return
+        }
+      } catch {
+        // profile fetch failed — proceed to home, proxy will redirect if needed
       }
     }
     router.push(next)

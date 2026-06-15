@@ -5,7 +5,7 @@ export const contentType = 'image/png'
 
 async function getCrossword(id: string) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/crosswords?id=eq.${id}&select=title,emoji&published=eq.true&limit=1`,
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/crosswords?id=eq.${encodeURIComponent(id)}&select=title,emoji&published=eq.true&limit=1`,
     {
       headers: {
         apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -14,8 +14,8 @@ async function getCrossword(id: string) {
       next: { revalidate: 3600 },
     }
   )
-  const data = await res.json()
-  return data[0] as { title: string; emoji: string } | undefined
+  const data = await res.json().catch(() => [])
+  return Array.isArray(data) ? data[0] as { title: string; emoji: string } | undefined : undefined
 }
 
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
@@ -25,10 +25,13 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   const title = crossword?.title ?? 'кроссворд'
   const emoji = crossword?.emoji ?? '🧩'
 
-  const [latinFont, cyrillicFont] = await Promise.all([
-    fetch('https://fonts.bunny.net/inter/files/inter-latin-700-normal.woff2').then(r => r.arrayBuffer()),
-    fetch('https://fonts.bunny.net/inter/files/inter-cyrillic-700-normal.woff2').then(r => r.arrayBuffer()),
+  const fonts = await Promise.all([
+    fetch('https://fonts.bunny.net/inter/files/inter-latin-700-normal.woff2').then(r => r.arrayBuffer()).catch(() => null),
+    fetch('https://fonts.bunny.net/inter/files/inter-cyrillic-700-normal.woff2').then(r => r.arrayBuffer()).catch(() => null),
   ])
+  const loadedFonts = fonts.flatMap((data, i) =>
+    data ? [{ name: 'Inter', data, style: 'normal' as const, weight: 700 as const }] : []
+  )
 
   return new ImageResponse(
     (
@@ -72,10 +75,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
     ),
     {
       ...size,
-      fonts: [
-        { name: 'Inter', data: latinFont, style: 'normal', weight: 700 },
-        { name: 'Inter', data: cyrillicFont, style: 'normal', weight: 700 },
-      ],
+      fonts: loadedFonts,
     }
   )
 }

@@ -68,12 +68,13 @@ export default function ProfileClient({ userId, userEmail, dbHistory, titleById,
     : avgTime
 
   const streak = (() => {
-    const s = solved.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    if (!s.length) return 0
+    const days = [...new Set(solved.map(h => h.date.slice(0, 10)))]
+      .sort((a, b) => b.localeCompare(a))
+    if (!days.length) return 0
     let count = 1
-    for (let i = 1; i < s.length; i++) {
-      const diff = Math.floor((new Date(s[i-1].date).getTime() - new Date(s[i].date).getTime()) / 86400000)
-      if (diff <= 1) count++ ; else break
+    for (let i = 1; i < days.length; i++) {
+      const diff = Math.floor((new Date(days[i-1]).getTime() - new Date(days[i]).getTime()) / 86400000)
+      if (diff === 1) count++; else break
     }
     return count
   })()
@@ -227,7 +228,7 @@ export default function ProfileClient({ userId, userEmail, dbHistory, titleById,
             const displayTitle = meta?.title ?? record.id
             const displayEmoji = meta?.emoji ?? '🧩'
             return (
-            <div key={i} onClick={() => setSelectedRecord(record)} style={{
+            <div key={record.id + record.date} onClick={() => setSelectedRecord(record)} style={{
               display: 'flex', alignItems: 'center', padding: '14px 16px', gap: '12px',
               borderBottom: i < history.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer',
             }}>

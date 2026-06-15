@@ -147,10 +147,59 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_check CHECK ((char_
 2. Создать bucket `heroes` (public) в Supabase Dashboard → Storage
 3. Добавить storage policies для `heroes` (admin upload, public read) — SQL в конце миграции 007 в комментариях
 
+## Code review (2026-06-16) — пофикшено
+
+- ✅ **Open Redirect** в `auth/callback/route.ts` — валидация `next` (только `/`, не `//`)
+- ✅ **URL injection** в `play/[id]/opengraph-image.tsx` — `encodeURIComponent(id)`
+- ✅ **CDN failure = 500** в обоих `opengraph-image.tsx` — `.catch(() => null)` + fallback без шрифта
+- ✅ **Non-array response** в `play/[id]/opengraph-image.tsx` — `Array.isArray` проверка
+- ✅ **Loading stuck** в `LoginForm.tsx` — `try/catch` вокруг profiles query
+- ✅ **Дублирующая/мёртвая валидация** в `LoginForm.tsx` — упрощена в один if
+- ✅ **Мутация массива** в `ProfileClient.tsx` — `solved.sort` → `[...new Set(days)].sort`
+- ✅ **Streak по уникальным дням** в `ProfileClient.tsx` — дедупликация по дате перед расчётом
+- ✅ **key=index** в history list — `key={record.id + record.date}`
+
+Остаётся (не критично):
+- `update-profile/route.ts` — не проверяется `count` при update (silent no-op если профиля нет)
+- `LoginForm.tsx:81` — signup не атомарен (user создаётся до profile)
+- `LoginForm.tsx:34` — `window.location.origin` потенциально не SSR-safe (не критично, компонент `'use client'`)
+
+## Сделано сегодня (2026-06-16)
+
+- ✅ Bucket `heroes` создан (public), storage policies применены → система тем полностью активна
+- ✅ Логотип KRS (чёрный квадрат) в Nav + иконка сайта обновлена
+- ✅ SEO: `generateMetadata` для `/play/[id]` (title, description, canonical, OG, Twitter card)
+- ✅ `fetchCrosswordById` обёрнут в `cache()` — нет двойного запроса к Supabase
+- ✅ **Forgot password** — `/auth/callback` + `/reset-password`, ссылка "забыл пароль?" в LoginForm
+- ✅ **Настройки профиля** — bottom sheet: смена юзернейма + смена пароля
+- ✅ **История игр** — клик по строке открывает result sheet вместо перехода на кроссворд
+- ✅ **OG images** — `opengraph-image.tsx` для главной и каждого кроссворда (Inter Cyrillic, dark bg)
+
 ## Известные мелочи / pending
 
 - [ ] **Cell/ClueBanner/GameControls/CrosswordList** — themed по теме кроссворда (Рик и Морти, etc), не light/dark. By design — НЕ трогать.
 - [ ] **gameHistory.ts** — у залогиненных `ResultSheet` всё ещё читает прогресс ачивок из localStorage. Чистить когда переходим на server-side achievements (когда ачивки начнут давать привилегии).
+
+## Backlog фич (приоритет сверху вниз)
+
+### Высокий приоритет
+- [ ] **Подсказка в игре** — кнопка "подсказать букву" в `GameControls` (max 2-3 за игру), снижает фрустрацию новичков
+- [ ] **Автосохранение игры** — при закрытии браузера сохранять прогресс в localStorage, при возврате предлагать "продолжить"
+- [ ] **Фильтр "только не решённые"** — на главной, тоггл чтобы видеть только новый контент
+- [ ] **Оценка кроссворда ⭐** — после решения форма "оценить 1-5 звёзд", собирать в БД, сортировать по рейтингу
+- [ ] **Статистика по сложности** — в профиле: % решённых и среднее время для easy/medium/hard
+
+### Средний приоритет
+- [ ] **Экспорт результата как картинка** — скачать PNG с временем, эмодзи, местом в топе (усилит шеринг)
+- [ ] **"Лучшее время" метка** — в истории игр иконка если текущий результат лучше предыдущего
+- [ ] **Медаль топ-10 на профиле** — если игрок в топ-10 по кол-ву решённых
+- [ ] **Отбор по сложности на главной** — горизонтальный скролл Easy/Medium/Hard помимо категорий
+
+### Низкий приоритет / амбициозные
+- [ ] **Ежедневный челлендж** — серия из 3-5 кроссвордов, бонус-ачивка, отдельный топ
+- [ ] **PWA уведомления** — подписка на уведомления при публикации нового кроссворда
+- [ ] **Анимация раскрытия сетки** — плавное появление клеток снизу вверх при старте игры
+- [ ] **Тултип горячих клавиш** — при первом входе в игру, запомнить в localStorage
 
 ## Отложено на post-launch
 
@@ -158,10 +207,7 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_check CHECK ((char_
 - CSRF tokens (SameSite=Lax дефолт даёт базовый)
 - Rate limit на /login (нужна Upstash/Vercel KV)
 - Audit log админ-действий
-- Пагинация лидерборда (top-10 хардкод)
 - Server-side achievements (когда ачивки начнут давать реальные привилегии)
-- Forgot password / email verification callback
-- OG image / реальный домен (favicon уже сделан)
 - Custom SMTP + русские email-шаблоны (Resend/Mailgun, нужен свой домен; Site URL уже настроен на прод)
 
 ## Запуск локально
