@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { humanizeAuthError } from '@/lib/auth-errors'
 
-type Mode = 'login' | 'register'
+type Mode = 'login' | 'register' | 'forgot'
 
 export default function LoginForm() {
   const router = useRouter()
@@ -28,6 +28,19 @@ export default function LoginForm() {
     setLoading(true)
 
     const supabase = createClient()
+
+    if (mode === 'forgot') {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      })
+      if (error) {
+        setError(humanizeAuthError(error.message))
+      } else {
+        setInfo('Письмо отправлено! Проверь почту и перейди по ссылке.')
+      }
+      setLoading(false)
+      return
+    }
 
     if (mode === 'register') {
       const trimmedUsername = username.trim()
@@ -129,9 +142,24 @@ export default function LoginForm() {
       border: '1px solid var(--border)',
     }}>
       <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '4px' }}>
-        {mode === 'login' ? 'вход' : 'регистрация'}
+        {mode === 'login' ? 'вход' : mode === 'register' ? 'регистрация' : 'сброс пароля'}
       </h1>
       <p style={{ fontSize: '13px', color: 'var(--text-light)', marginBottom: '24px' }}>красвордс</p>
+
+      {mode === 'forgot' && (
+        <>
+          <label style={labelStyle}>email</label>
+          <input
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            style={inputStyle}
+            placeholder="твой email"
+          />
+        </>
+      )}
 
       {mode === 'login' ? (
         <>
@@ -179,16 +207,20 @@ export default function LoginForm() {
         </>
       )}
 
-      <label style={{ ...labelStyle, marginTop: '14px' }}>пароль</label>
-      <input
-        type="password"
-        autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-        required
-        minLength={mode === 'register' ? 8 : undefined}
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-        style={inputStyle}
-      />
+      {mode !== 'forgot' && (
+        <>
+          <label style={{ ...labelStyle, marginTop: '14px' }}>пароль</label>
+          <input
+            type="password"
+            autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+            required
+            minLength={mode === 'register' ? 8 : undefined}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            style={inputStyle}
+          />
+        </>
+      )}
 
       {error && (
         <div style={{
@@ -219,22 +251,37 @@ export default function LoginForm() {
           border: 'none', fontSize: '14px', fontWeight: 500,
           cursor: loading ? 'not-allowed' : 'pointer',
           opacity: loading ? 0.6 : 1,
+          fontFamily: 'inherit',
         }}
       >
-        {loading ? '...' : mode === 'login' ? 'войти' : 'создать аккаунт'}
+        {loading ? '...' : mode === 'login' ? 'войти' : mode === 'register' ? 'создать аккаунт' : 'отправить письмо'}
       </button>
+
+      {mode === 'login' && (
+        <button
+          type="button"
+          onClick={() => { setMode('forgot'); setError(null); setInfo(null) }}
+          style={{
+            marginTop: '8px', width: '100%', padding: '10px',
+            borderRadius: '12px', background: 'transparent', color: 'var(--text-light)',
+            border: 'none', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          забыл пароль?
+        </button>
+      )}
 
       <button
         type="button"
-        onClick={() => { setMode(m => m === 'login' ? 'register' : 'login'); setError(null); setInfo(null) }}
+        onClick={() => { setMode(m => m === 'register' ? 'login' : 'register'); setError(null); setInfo(null) }}
         style={{
-          marginTop: '12px', width: '100%', padding: '10px',
+          marginTop: mode === 'login' ? '4px' : '12px', width: '100%', padding: '10px',
           borderRadius: '12px', background: 'transparent', color: 'var(--text-light)',
           border: '1px solid var(--border)', fontSize: '13px', cursor: 'pointer',
           fontFamily: 'inherit',
         }}
       >
-        {mode === 'login' ? 'нет аккаунта? зарегистрироваться' : 'уже есть аккаунт? войти'}
+        {mode === 'register' ? 'уже есть аккаунт? войти' : 'нет аккаунта? зарегистрироваться'}
       </button>
     </form>
   )

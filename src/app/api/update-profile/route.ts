@@ -11,11 +11,23 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json().catch(() => null) as
-    | { avatar?: { type: string; value: string } }
+    | { avatar?: { type: string; value: string }; username?: string }
     | null
   if (!body) return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
 
   const patch: Record<string, unknown> = {}
+
+  if (body.username !== undefined) {
+    const u = body.username.trim()
+    const exceptions = ['1', '2', 'a']
+    if ((u.length < 4 && !exceptions.includes(u)) || u.length > 20) {
+      return NextResponse.json({ error: 'Юзернейм: 4–20 символов' }, { status: 400 })
+    }
+    if (!/^[a-zA-Zа-яёА-ЯЁ0-9_]+$/.test(u)) {
+      return NextResponse.json({ error: 'Юзернейм: только буквы, цифры и _' }, { status: 400 })
+    }
+    patch.username = u
+  }
 
   if (body.avatar) {
     if (body.avatar.type === 'emoji') {
@@ -39,7 +51,13 @@ export async function PATCH(req: Request) {
   const { error } = await (admin.from('profiles') as any)
     .update(patch)
     .eq('id', user.id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    const msg = error.message?.toLowerCase() ?? ''
+    if (msg.includes('unique') || msg.includes('duplicate')) {
+      return NextResponse.json({ error: 'Этот юзернейм уже занят' }, { status: 409 })
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
   return NextResponse.json({ ok: true })
 }

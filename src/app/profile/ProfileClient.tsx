@@ -39,6 +39,14 @@ export default function ProfileClient({ userId, userEmail, dbHistory, titleById,
   const [avatarEmoji, setAvatarEmoji] = useState(initialAvatarEmoji)
   const [bannerUrl, setBannerUrl] = useState(initialBannerUrl)
   const [selectedRecord, setSelectedRecord] = useState<{ id: string; time: number; date: string; solved: boolean } | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [newUsername, setNewUsername] = useState(username ?? '')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [settingsError, setSettingsError] = useState<string | null>(null)
+  const [settingsInfo, setSettingsInfo] = useState<string | null>(null)
+  const [savingUsername, setSavingUsername] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
 
   useEffect(() => {
     if (!userEmail) {
@@ -320,33 +328,158 @@ export default function ProfileClient({ userId, userEmail, dbHistory, titleById,
       )}
 
       {userEmail && (
-        <button
-          onClick={async () => {
-            setSigningOut(true)
-            const supabase = createClient()
-            await supabase.auth.signOut()
-            router.push('/')
-            router.refresh()
-          }}
-          disabled={signingOut}
-          style={{
-            marginTop: '24px',
-            width: '100%',
-            padding: '14px',
-            background: 'transparent',
-            border: '1px solid var(--danger-border)',
-            borderRadius: '14px',
-            fontSize: '14px',
-            fontWeight: 500,
-            color: 'var(--danger)',
-            cursor: signingOut ? 'not-allowed' : 'pointer',
-            fontFamily: 'inherit',
-            opacity: signingOut ? 0.6 : 1,
-            minHeight: '48px',
-          }}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '24px' }}>
+          <button
+            onClick={() => { setSettingsOpen(true); setSettingsError(null); setSettingsInfo(null) }}
+            style={{
+              width: '100%', padding: '14px', background: 'transparent',
+              border: '1px solid var(--border)', borderRadius: '14px',
+              fontSize: '14px', fontWeight: 500, color: 'var(--text)',
+              cursor: 'pointer', fontFamily: 'inherit', minHeight: '48px',
+            }}
+          >
+            настройки профиля
+          </button>
+          <button
+            onClick={async () => {
+              setSigningOut(true)
+              const supabase = createClient()
+              await supabase.auth.signOut()
+              router.push('/')
+              router.refresh()
+            }}
+            disabled={signingOut}
+            style={{
+              width: '100%', padding: '14px', background: 'transparent',
+              border: '1px solid var(--danger-border)', borderRadius: '14px',
+              fontSize: '14px', fontWeight: 500, color: 'var(--danger)',
+              cursor: signingOut ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+              opacity: signingOut ? 0.6 : 1, minHeight: '48px',
+            }}
+          >
+            {signingOut ? 'выходим...' : 'выйти из аккаунта'}
+          </button>
+        </div>
+      )}
+
+      {settingsOpen && (
+        <div
+          onClick={() => setSettingsOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
         >
-          {signingOut ? 'выходим...' : 'выйти из аккаунта'}
-        </button>
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', padding: '32px 24px 40px', width: '100%', maxWidth: '480px', boxShadow: '0 -4px 24px rgba(0,0,0,0.15)' }}
+          >
+            <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px' }}>настройки профиля</h2>
+
+            {settingsError && (
+              <div style={{ marginBottom: '12px', padding: '10px 12px', borderRadius: '10px', background: 'var(--danger-soft)', color: 'var(--danger)', fontSize: '12px', border: '1px solid var(--danger-border)' }}>
+                {settingsError}
+              </div>
+            )}
+            {settingsInfo && (
+              <div style={{ marginBottom: '12px', padding: '10px 12px', borderRadius: '10px', background: 'var(--accent-soft)', color: 'var(--accent)', fontSize: '12px', border: '1px solid var(--accent)' }}>
+                {settingsInfo}
+              </div>
+            )}
+
+            {/* Change username */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-light)', marginBottom: '6px', fontWeight: 600 }}>
+                юзернейм
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  value={newUsername}
+                  onChange={e => setNewUsername(e.target.value)}
+                  maxLength={20}
+                  style={{ flex: 1, padding: '10px 12px', fontSize: '14px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '10px', outline: 'none', fontFamily: 'inherit' }}
+                />
+                <button
+                  onClick={async () => {
+                    setSettingsError(null); setSettingsInfo(null); setSavingUsername(true)
+                    const res = await fetch('/api/update-profile', {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ username: newUsername }),
+                    })
+                    const data = await res.json().catch(() => ({}))
+                    if (!res.ok) { setSettingsError(data.error ?? 'Ошибка') }
+                    else { setSettingsInfo('Юзернейм обновлён') }
+                    setSavingUsername(false)
+                  }}
+                  disabled={savingUsername || newUsername.trim() === (username ?? '')}
+                  style={{
+                    padding: '10px 16px', background: 'var(--text)', color: 'var(--bg)',
+                    border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600,
+                    cursor: savingUsername || newUsername.trim() === (username ?? '') ? 'not-allowed' : 'pointer',
+                    opacity: savingUsername || newUsername.trim() === (username ?? '') ? 0.5 : 1,
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {savingUsername ? '...' : 'сохранить'}
+                </button>
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px' }}>4–20 символов, только буквы/цифры/_</div>
+            </div>
+
+            {/* Change password */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-light)', marginBottom: '6px', fontWeight: 600 }}>
+                новый пароль
+              </label>
+              <input
+                type="password"
+                autoComplete="new-password"
+                placeholder="минимум 8 символов"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', fontSize: '14px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '10px', outline: 'none', fontFamily: 'inherit', marginBottom: '8px' }}
+              />
+              <input
+                type="password"
+                autoComplete="new-password"
+                placeholder="повтори пароль"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', fontSize: '14px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '10px', outline: 'none', fontFamily: 'inherit' }}
+              />
+              <button
+                onClick={async () => {
+                  setSettingsError(null); setSettingsInfo(null)
+                  if (newPassword.length < 8) { setSettingsError('Пароль: минимум 8 символов'); return }
+                  if (newPassword !== confirmPassword) { setSettingsError('Пароли не совпадают'); return }
+                  setSavingPassword(true)
+                  const supabase = createClient()
+                  const { error } = await supabase.auth.updateUser({ password: newPassword })
+                  if (error) { setSettingsError(error.message) }
+                  else { setSettingsInfo('Пароль изменён'); setNewPassword(''); setConfirmPassword('') }
+                  setSavingPassword(false)
+                }}
+                disabled={savingPassword || !newPassword}
+                style={{
+                  marginTop: '8px', width: '100%', padding: '12px',
+                  background: 'var(--text)', color: 'var(--bg)',
+                  border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 600,
+                  cursor: savingPassword || !newPassword ? 'not-allowed' : 'pointer',
+                  opacity: savingPassword || !newPassword ? 0.5 : 1,
+                  fontFamily: 'inherit',
+                }}
+              >
+                {savingPassword ? '...' : 'сменить пароль'}
+              </button>
+            </div>
+
+            <button
+              onClick={() => setSettingsOpen(false)}
+              style={{ width: '100%', padding: '14px', background: 'transparent', border: '1px solid var(--border)', borderRadius: '14px', fontSize: '15px', fontWeight: 500, cursor: 'pointer', color: 'var(--text)', fontFamily: 'inherit' }}
+            >
+              закрыть
+            </button>
+          </div>
+        </div>
       )}
 
       {editorOpen && userId && (
