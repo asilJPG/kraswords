@@ -40,6 +40,19 @@ export default function Nav() {
           alignItems: 'center',
           gap: '8px',
         }}>
+          <span style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '28px',
+            height: '28px',
+            borderRadius: '8px',
+            background: '#000000',
+            color: '#fff',
+            fontSize: '10px',
+            fontWeight: 800,
+            letterSpacing: '0.5px',
+          }}>KRS</span>
           <span>красвордс</span>
         </Link>
 
