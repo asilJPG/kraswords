@@ -38,6 +38,7 @@ export default function ProfileClient({ userId, userEmail, dbHistory, titleById,
   const [avatarOpen, setAvatarOpen] = useState(false)
   const [avatarEmoji, setAvatarEmoji] = useState(initialAvatarEmoji)
   const [bannerUrl, setBannerUrl] = useState(initialBannerUrl)
+  const [selectedRecord, setSelectedRecord] = useState<{ id: string; time: number; date: string; solved: boolean } | null>(null)
 
   useEffect(() => {
     if (!userEmail) {
@@ -218,27 +219,94 @@ export default function ProfileClient({ userId, userEmail, dbHistory, titleById,
             const displayTitle = meta?.title ?? record.id
             const displayEmoji = meta?.emoji ?? '🧩'
             return (
-            <Link key={i} href={`/play/${record.id}`}>
-              <div style={{
-                display: 'flex', alignItems: 'center', padding: '14px 16px', gap: '12px',
-                borderBottom: i < history.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer',
-              }}>
-                <span style={{ fontSize: '20px' }}>{displayEmoji}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '14px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayTitle}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>
-                    {new Date(record.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
-                  </div>
-                </div>
-                <div style={{ fontSize: '14px', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: record.solved ? 'var(--accent)' : 'var(--text-light)' }}>
-                  {record.solved ? formatTime(record.time) : 'не решён'}
+            <div key={i} onClick={() => setSelectedRecord(record)} style={{
+              display: 'flex', alignItems: 'center', padding: '14px 16px', gap: '12px',
+              borderBottom: i < history.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer',
+            }}>
+              <span style={{ fontSize: '20px' }}>{displayEmoji}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '14px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayTitle}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>
+                  {new Date(record.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
                 </div>
               </div>
-            </Link>
+              <div style={{ fontSize: '14px', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: record.solved ? 'var(--accent)' : 'var(--text-light)' }}>
+                {record.solved ? formatTime(record.time) : 'не решён'}
+              </div>
+            </div>
             )
           })}
         </div>
       )}
+
+      {selectedRecord && (() => {
+        const meta = titleById?.[selectedRecord.id]
+        const displayTitle = meta?.title ?? selectedRecord.id
+        const displayEmoji = meta?.emoji ?? '🧩'
+        return (
+          <div
+            onClick={() => setSelectedRecord(null)}
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100,
+              display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: 'var(--bg)', borderRadius: '24px 24px 0 0',
+                padding: '32px 24px 40px', width: '100%', maxWidth: '480px',
+                boxShadow: '0 -4px 24px rgba(0,0,0,0.15)',
+              }}
+            >
+              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <div style={{ fontSize: '48px', marginBottom: '8px' }}>{displayEmoji}</div>
+                <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '4px' }}>{displayTitle}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-light)' }}>
+                  {new Date(selectedRecord.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '28px' }}>
+                <div style={{ textAlign: 'center', padding: '20px 40px', background: 'var(--surface)', borderRadius: '16px' }}>
+                  <div style={{ fontSize: '32px', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: selectedRecord.solved ? 'var(--accent)' : 'var(--text-light)' }}>
+                    {selectedRecord.solved ? formatTime(selectedRecord.time) : '—'}
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-light)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {selectedRecord.solved ? 'время решения' : 'не решён'}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <Link
+                  href={`/play/${selectedRecord.id}`}
+                  onClick={() => setSelectedRecord(null)}
+                  style={{
+                    display: 'block', textAlign: 'center', padding: '14px',
+                    background: 'var(--text)', color: 'var(--bg)',
+                    borderRadius: '14px', fontSize: '15px', fontWeight: 600,
+                    textDecoration: 'none',
+                  }}
+                >
+                  играть снова
+                </Link>
+                <button
+                  onClick={() => setSelectedRecord(null)}
+                  style={{
+                    padding: '14px', background: 'transparent',
+                    border: '1px solid var(--border)', borderRadius: '14px',
+                    fontSize: '15px', fontWeight: 500, cursor: 'pointer',
+                    color: 'var(--text)', fontFamily: 'inherit',
+                  }}
+                >
+                  закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {!userEmail && (
         <div style={{ marginTop: '24px', padding: '16px', background: 'var(--surface)', borderRadius: '14px', textAlign: 'center' }}>
