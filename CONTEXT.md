@@ -2,7 +2,7 @@
 
 Файл обновляется при каждом `git push`. Если открыл на другом компе — читай этот файл первым после `git pull`.
 
-Last update: 2026-06-15 (themes & decorations system WIP, hero card, visual effects)
+Last update: 2026-06-16 (themes & decorations system committed — migration 007 + CRUD + effects + corner objects)
 
 ---
 
@@ -132,18 +132,20 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_check CHECK ((char_
 - ✅ Кастомная иконка сайта: удален дефолтный `favicon.ico` от Vercel и создана новая SVG-иконка.
 - ✅ Hero-карточка «Кроссворд дня» на главной для темы Рик и Морти (коммит `2362d05`)
 
-## 🚧 В процессе (НЕ закоммичено)
+## 🚧 Закоммичено, но НЕ активировано на проде
 
-Система **тем и декораций** — позволяет админам создавать переиспользуемые визуальные темы:
+Система **тем и декораций** (коммит `13f61ec`, 1055 строк):
 
-- **Миграция 007** — таблица `themes_custom` (id, name, config jsonb, RLS admin-only write)
+- **Миграция 007** — таблица `themes_custom` (id, name, config jsonb, RLS admin-only write) — **НЕ применена на проде**
 - **Admin UI** — `/admin/themes` CRUD: список, создание, редактирование (`ThemeEditor`, `ThemeForm`, `ThemeDeleteButton`, `ImageUploader`)
 - **API** — `/api/admin/themes` GET/POST, `/api/admin/themes/[id]` GET/PATCH/DELETE; `/api/upload-hero` для загрузки hero/corner изображений
 - **CornerObject** — плавающий декоративный элемент в игре (позиция, размер, анимация float/pulse)
 - **Эффекты** — `Lightning.tsx`, `Rain.tsx`, `Stars.tsx`, `MagicSparkles.tsx`, `Particles.tsx`, `PortalDrips.tsx` в `src/components/game/effects/`
-- **Изменения в существующих файлах** — `CrosswordGame.tsx` (подключение эффектов/corner), `crosswords.ts` (новые типы тем), `globals.css` (анимации corner-float/corner-pulse), `admin/layout.tsx` (ссылка на /admin/themes)
 
-**Статус:** код написан, но НЕ закоммичен. Миграция 007 НЕ применена на проде. Bucket `heroes` нужно создать вручную.
+**Чтобы активировать:**
+1. Применить `supabase/migrations/007_themes_and_decorations.sql` в Supabase SQL Editor
+2. Создать bucket `heroes` (public) в Supabase Dashboard → Storage
+3. Добавить storage policies для `heroes` (admin upload, public read) — SQL в конце миграции 007 в комментариях
 
 ## Известные мелочи / pending
 
