@@ -2,7 +2,7 @@
 
 Файл обновляется при каждом `git push`. Если открыл на другом компе — читай этот файл первым после `git pull`.
 
-Last update: 2026-06-16 (themes & decorations system committed — migration 007 + CRUD + effects + corner objects)
+Last update: 2026-06-17 (OG image build fix — woff2 → woff)
 
 ---
 
@@ -163,6 +163,12 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_check CHECK ((char_
 - `update-profile/route.ts` — не проверяется `count` при update (silent no-op если профиля нет)
 - `LoginForm.tsx:81` — signup не атомарен (user создаётся до profile)
 - `LoginForm.tsx:34` — `window.location.origin` потенциально не SSR-safe (не критично, компонент `'use client'`)
+
+## Фикс билда (2026-06-17)
+
+- ✅ **`next build` падал** на `/opengraph-image` и `/play/[id]/opengraph-image`: `Error: Unsupported OpenType signature wOF2` — Satori (рендерер `next/og`) не понимает `.woff2`, только `.woff`/`.ttf`/`.otf`. Поменяли источник шрифта с `inter-*.woff2` на `inter-*.woff` на Bunny Fonts CDN в обоих файлах.
+- ✅ Убраны случайно закоммиченные мусорные файлы `settings.json` и `statusline-command.sh` (артефакты настройки статус-лайна Claude Code, попали в репо по ошибке в прошлом коммите).
+- ⚠️ **Важно на будущее:** если добавляешь шрифты для `next/og` — всегда `.woff`/`.ttf`, никогда `.woff2`. `npm run build` нужно гонять перед пушем фич с `ImageResponse`, т.к. ошибка не ловится тайпчеком, только реальным build/prerender.
 
 ## Сделано сегодня (2026-06-16)
 
