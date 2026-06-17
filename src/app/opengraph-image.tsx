@@ -5,8 +5,8 @@ export const contentType = 'image/png'
 
 export default async function Image() {
   const fonts = await Promise.all([
-    fetch('https://fonts.bunny.net/inter/files/inter-latin-700-normal.woff2').then(r => r.arrayBuffer()).catch(() => null),
-    fetch('https://fonts.bunny.net/inter/files/inter-cyrillic-700-normal.woff2').then(r => r.arrayBuffer()).catch(() => null),
+    fetch('https://fonts.bunny.net/inter/files/inter-latin-700-normal.woff').then(r => r.arrayBuffer()).catch(() => null),
+    fetch('https://fonts.bunny.net/inter/files/inter-cyrillic-700-normal.woff').then(r => r.arrayBuffer()).catch(() => null),
   ])
   const loadedFonts = fonts.flatMap((data) =>
     data ? [{ name: 'Inter', data, style: 'normal' as const, weight: 700 as const }] : []

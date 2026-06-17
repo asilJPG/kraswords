@@ -26,8 +26,8 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   const emoji = crossword?.emoji ?? '🧩'
 
   const fonts = await Promise.all([
-    fetch('https://fonts.bunny.net/inter/files/inter-latin-700-normal.woff2').then(r => r.arrayBuffer()).catch(() => null),
-    fetch('https://fonts.bunny.net/inter/files/inter-cyrillic-700-normal.woff2').then(r => r.arrayBuffer()).catch(() => null),
+    fetch('https://fonts.bunny.net/inter/files/inter-latin-700-normal.woff').then(r => r.arrayBuffer()).catch(() => null),
+    fetch('https://fonts.bunny.net/inter/files/inter-cyrillic-700-normal.woff').then(r => r.arrayBuffer()).catch(() => null),
   ])
   const loadedFonts = fonts.flatMap((data, i) =>
     data ? [{ name: 'Inter', data, style: 'normal' as const, weight: 700 as const }] : []
