@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CrosswordData } from '@/lib/crossword/types'
 import { buildCells, buildCorrectLetters } from '@/lib/crossword/grid'
-import { getClueKey } from '@/lib/crossword/clue-utils'
+import { getCellsForClue, getClueKey } from '@/lib/crossword/clue-utils'
 import { formatTime } from '@/lib/crossword/format'
 import { saveGame } from '@/lib/gameHistory'
 import ResultSheet from '@/components/ResultSheet'
@@ -33,6 +33,7 @@ export default function CrosswordGame({ crossword, isLoggedIn = true }: { crossw
   useHideMainNav()
   const [sheetOpen, setSheetOpen] = useState(false)
   const [rank, setRank] = useState<number | null>(null)
+  const [hintsLeft, setHintsLeft] = useState(3)
 
   const cells = useMemo(() => buildCells(crossword), [crossword])
   const correctLetters = useMemo(() => buildCorrectLetters(crossword), [crossword])
@@ -89,6 +90,36 @@ export default function CrosswordGame({ crossword, isLoggedIn = true }: { crossw
     inp.reset()
     resetTimer()
     sel.reset()
+    setHintsLeft(3)
+  }
+
+  // Подсказка: выбранная клетка, если пустая/неверная; иначе первая такая
+  // в активном слове; иначе — первая по сетке.
+  const handleHint = () => {
+    if (hintsLeft <= 0 || inp.solved) return
+    const needsHelp = (r: number, c: number) => {
+      const k = `${r},${c}`
+      return correctLetters[k] !== undefined && inp.input[k] !== correctLetters[k]
+    }
+    let target: { row: number; col: number } | null = null
+    if (sel.selected && needsHelp(sel.selected.row, sel.selected.col)) {
+      target = sel.selected
+    } else if (activeClueObj) {
+      const cell = getCellsForClue(activeClueObj).find(([r, c]) => needsHelp(r, c))
+      if (cell) target = { row: cell[0], col: cell[1] }
+    }
+    if (!target) {
+      const key = Object.keys(correctLetters).find(k => {
+        const [r, c] = k.split(',').map(Number)
+        return needsHelp(r, c)
+      })
+      if (!key) return
+      const [r, c] = key.split(',').map(Number)
+      target = { row: r, col: c }
+    }
+    if (!sel.running) sel.setRunning(true)
+    inp.revealLetter(target.row, target.col, correctLetters[`${target.row},${target.col}`])
+    setHintsLeft(h => h - 1)
   }
 
   return (
@@ -187,6 +218,8 @@ export default function CrosswordGame({ crossword, isLoggedIn = true }: { crossw
               isDark={isDark}
               onCheck={() => inp.setChecked(true)}
               onReset={handleReset}
+              onHint={handleHint}
+              hintsLeft={hintsLeft}
             />
           </div>
 

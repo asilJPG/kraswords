@@ -1,16 +1,15 @@
-import { useMemo } from 'react'
 import type { ThemeConfig } from '@/lib/crossword/types'
+import { useClientRandom } from './useClientRandom'
 
 export default function MagicSparkles({ theme }: { theme: ThemeConfig }) {
-  if (theme.id !== 'harrypotter' && theme.effect !== 'magic-sparkles') return null
-
-  const sparkles = useMemo(() => Array(18).fill(0).map(() => ({
+  const sparkles = useClientRandom(() => Array(18).fill(0).map(() => ({
     left: Math.random() * 100,
     top: Math.random() * 100,
     delay: Math.random() * 8,
     duration: 2 + Math.random() * 3,
     size: 3 + Math.random() * 5,
-  })), [])
+  })))
+  if (theme.id !== 'harrypotter' && theme.effect !== 'magic-sparkles') return null
 
   return (
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>

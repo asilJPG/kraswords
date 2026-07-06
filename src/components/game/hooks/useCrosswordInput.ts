@@ -57,6 +57,18 @@ export function useCrosswordInput({
     }
   }, [selected, solved, advanceCaret, checkSolved])
 
+  // Подсказка: вписать букву в произвольную клетку (не двигает каретку)
+  const revealLetter = useCallback((row: number, col: number, letter: string) => {
+    if (solved) return
+    const next = { ...inputRef.current, [`${row},${col}`]: letter }
+    setInput(next)
+    setChecked(false)
+    if (checkSolved(next)) {
+      setSolved(true)
+      onSolvedRef.current(next)
+    }
+  }, [solved, checkSolved])
+
   const handleBackspace = useCallback(() => {
     if (!selected || solved) return
     const { row, col } = selected
@@ -111,7 +123,7 @@ export function useCrosswordInput({
 
   return {
     input, checked, solved,
-    handleMobileInput, handleBackspace,
+    handleMobileInput, handleBackspace, revealLetter,
     setChecked, reset,
   }
 }
