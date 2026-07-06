@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { themeFromImage } from '@/lib/crossword/theme-from-image'
 
 export interface HeroImage { wide: string; portrait: string }
 
 interface Props {
   heroImage: HeroImage | null
-  onApply: (hero: HeroImage) => void
+  onApply: (hero: HeroImage, theme: Record<string, string> | null) => void
 }
 
 // Генерация идёт в браузере (бесплатный pollinations.ai, без ключей),
@@ -46,6 +47,7 @@ export default function HeroGenerator({ heroImage, onApply }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<{ wide: Blob; portrait: Blob } | null>(null)
   const [previewUrls, setPreviewUrls] = useState<{ wide: string; portrait: string } | null>(null)
+  const [buildTheme, setBuildTheme] = useState(true)
   const seedRef = useRef(7)
 
   useEffect(() => () => {
@@ -76,9 +78,10 @@ export default function HeroGenerator({ heroImage, onApply }: Props) {
     setError(null)
     setStage('uploading')
     try {
+      const theme = buildTheme ? await themeFromImage(preview.wide) : null
       const wide = await uploadHero(preview.wide, 'hero-wide')
       const portrait = await uploadHero(preview.portrait, 'hero-portrait')
-      onApply({ wide, portrait })
+      onApply({ wide, portrait }, theme)
       setPreview(null)
       setPreviewUrls(null)
     } catch (e) {
@@ -138,6 +141,11 @@ export default function HeroGenerator({ heroImage, onApply }: Props) {
           <img src={previewUrls.portrait} alt="вертикальная" style={{ width: '72px', borderRadius: '8px', display: 'block' }} />
         </div>
       )}
+
+      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+        <input type="checkbox" checked={buildTheme} onChange={e => setBuildTheme(e.target.checked)} />
+        🪄 собрать всю тему из картинки (фон, цвета клеток, эффект)
+      </label>
 
       {error && <div style={{ fontSize: '12px', color: 'var(--danger)' }}>{error}</div>}
       <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>

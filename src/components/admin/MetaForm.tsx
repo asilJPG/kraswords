@@ -171,7 +171,13 @@ export default function MetaForm({ meta, onChange }: Props) {
 
       <HeroGenerator
         heroImage={(meta.theme_custom?.heroImage as HeroImage | undefined) ?? null}
-        onApply={hero => onChange({ ...meta, theme_custom: { ...(meta.theme_custom || {}), heroImage: hero } })}
+        onApply={(hero, theme) => onChange({
+          ...meta,
+          // палитра из картинки перезаписывает цвета, heroImage — поверх;
+          // theme_id → custom, чтобы поля темы стали редактируемыми
+          ...(theme ? { theme_id: 'custom' } : {}),
+          theme_custom: { ...(meta.theme_custom || {}), ...(theme || {}), heroImage: hero },
+        })}
       />
 
       <Field label="сложность">
