@@ -2,7 +2,7 @@
 
 Файл обновляется при каждом `git push`. Если открыл на другом компе — читай этот файл первым после `git pull`.
 
-Last update: 2026-06-17 (OG image build fix — woff2 → woff)
+Last update: 2026-07-06 (полный аудит + security/логические фиксы, BUSINESS_STRATEGY.md)
 
 ---
 
@@ -43,11 +43,9 @@ src/
 │   ├── setup-profile/{page, SetupForm}.tsx
 │   ├── top/page.tsx
 │   └── api/
-│       ├── admin/crosswords/{route, [id]/route}.ts (GET, POST, PATCH публикация/snять, DELETE)
-│       ├── check/route.ts          (использует fetchCrosswordById)
+│       ├── admin/crosswords/{route, [id]/route}.ts (GET, POST, PATCH публикация/snять, DELETE; валидация через lib/crossword/validate.ts)
 │       ├── game-result/route.ts    (сервер сам верифицирует через verifyAnswers)
-│       ├── leaderboard/route.ts
-│       ├── resolve-login/route.ts  (email или username → email, generic 401 на любую неудачу)
+│       ├── login/route.ts          (login+password → server-side sign-in; email наружу не отдаётся, generic 401)
 │       ├── setup-profile/route.ts  (server-side validation + insert)
 │       ├── update-profile/route.ts (PATCH avatar/etc — jsonb)
 │       ├── upload-banner/route.ts
@@ -81,6 +79,7 @@ IMPORT_API_KEY=…              ← для bulk import кроссвордов ч
 7. `supabase/migrations/005_admin_users_table.sql` (роли вынесены в admin_users; profiles.role удалена; список админов больше не утекает)
 8. `supabase/migrations/006_drop_author_column.sql` (удалена неиспользуемая колонка author из crosswords)
 9. `supabase/migrations/007_themes_and_decorations.sql` (таблица `themes_custom` + RLS + bucket `heroes`)
+10. `supabase/migrations/008_security_fixes.sql` — **⚠️ НЕ ПРИМЕНЕНА, прогнать при первой возможности**: дроп `insert_own` на game_results (читерский прямой insert), дроп `auth_read_all` на crosswords (черновики с ответами были видны залогиненным), charset CHECK на username, фикс триггера updated_at для themes_custom
 
 Storage bucket `banners` — создаётся вручную в Supabase Dashboard → Storage (политики раскомментированы в schema.sql).
 Storage bucket `heroes` — для hero-изображений и corner-объектов тем (public read, admin upload). Создаётся вручную.
@@ -163,6 +162,33 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_username_check CHECK ((char_
 - `update-profile/route.ts` — не проверяется `count` при update (silent no-op если профиля нет)
 - `LoginForm.tsx:81` — signup не атомарен (user создаётся до profile)
 - `LoginForm.tsx:34` — `window.location.origin` потенциально не SSR-safe (не критично, компонент `'use client'`)
+
+## Аудит 2026-07-06 — пофикшено
+
+Security:
+- ✅ **Утечка email** — `/api/resolve-login` отдавал email по нику любому. Удалён; вход теперь целиком через новый `/api/login` (login+password → sign-in на сервере, куки ставит серверный клиент, generic 401). `LoginForm` переведён на него.
+- ✅ **RLS-фиксы** — миграция 008 (см. выше, ⚠️ прогнать в SQL Editor): прямой insert в game_results, чтение черновиков, charset юзернейма в БД.
+- ✅ Удалены мёртвые эндпоинты `/api/check` и `/api/leaderboard` (нигде не вызывались; check был оракулом для перебора букв без auth/rate-limit).
+- ✅ Удалены мусорные файлы `test_cookie.mjs`, `_tests/`.
+
+Логика:
+- ✅ **Счётчик solvers недосчитывал** — если первая попытка была неудачной, при решении инкремент не срабатывал (`game-result/route.ts`). Теперь «первое решение» = нет записи ИЛИ запись была unsolved.
+- ✅ **Повторный onSolved** — после решения можно было перепечатать букву → дублирующий POST и переоткрытие ResultSheet. Guard на `solved` в `useCrosswordInput`.
+- ✅ **Вечный стрик** — серия в профиле не сбрасывалась, если последнее решение было давно. Теперь 0, если последний день решения не сегодня/вчера.
+- ✅ **Ачивка «3 дня подряд» за 3 решения в один день** — diff<=1 считал тот же день продолжением серии. Дедупликация по дням + строгий diff===1 (ProfileClient + gameHistory).
+- ✅ **Ластик баннера рисовал чёрным** — destination-out делал прозрачные дыры, JPEG превращал их в чёрные мазки. Ластик теперь рисует цветом подложки #f5f5f5.
+- ✅ **Таймер занижал время** — считал тики setInterval (троттлятся в фоне); теперь от Date.now() с накоплением при паузе.
+- ✅ **Валидатор кроссвордов** — вынесен в общий `src/lib/crossword/validate.ts` (был скопипащен в 2 роута) + новые проверки решаемости: слово не выходит за сетку, ответы только А-Я/A-Z uppercase, конфликты букв на пересечениях.
+
+Известное, отложено осознанно:
+- Время решения по-прежнему клиентское + ответы приходят в payload → топ фальсифицируем упорным читером. Честный тайминг = server-side (post-launch).
+- `/top` и профиль тянут все game_results без агрегации в SQL — ок до ~тысяч записей.
+- Ники-исключения '1', '2', 'a' может занять кто угодно.
+- Домен: metadataBase/sitemap/robots указывают на красвордс.com (xn--80aegvwjdfe.com), прод пока на words-eta-ruby.vercel.app — **подключить домен** (первый пункт роадмапа в BUSINESS_STRATEGY.md).
+
+## Бизнес-стратегия
+
+См. `BUSINESS_STRATEGY.md` — позиционирование, каналы роста (SEO, Telegram, фандомные сообщества, короткие видео), retention-механики (стрик, челлендж дня, шеринг картинкой), монетизация, метрики и роадмап 30/60/90.
 
 ## Фикс билда (2026-06-17)
 

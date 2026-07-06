@@ -103,13 +103,12 @@ export function getAchievementProgress(): Record<string, number> {
   progress['solve_all'] = Math.min(solved.length, 6)
   progress['speed_3min'] = solved.some(h => h.time < 180) ? 1 : 0
   progress['speed_5min'] = solved.some(h => h.time < 300) ? 1 : 0
-  const sortedByDate = solved.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-  let maxStreak = 0, streak = 0
-  for (let i = 0; i < sortedByDate.length; i++) {
-    if (i === 0) { streak = 1 } else {
-      const diff = Math.floor((new Date(sortedByDate[i].date).getTime() - new Date(sortedByDate[i - 1].date).getTime()) / 86400000)
-      streak = diff <= 1 ? streak + 1 : 1
-    }
+  // «3 дня подряд» — по уникальным дням, несколько решений в один день не считаются серией
+  const solveDays = [...new Set(solved.map(h => h.date.slice(0, 10)))].sort()
+  let maxStreak = solveDays.length ? 1 : 0, streak = 1
+  for (let i = 1; i < solveDays.length; i++) {
+    const diff = Math.floor((Date.parse(solveDays[i]) - Date.parse(solveDays[i - 1])) / 86400000)
+    streak = diff === 1 ? streak + 1 : 1
     maxStreak = Math.max(maxStreak, streak)
   }
   progress['streak_3'] = Math.min(maxStreak, 3)

@@ -90,40 +90,30 @@ export default function LoginForm() {
       return
     }
 
-    // resolve email from login (email OR username)
-    const resolveRes = await fetch('/api/resolve-login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ login: loginField }),
-    })
-    const resolveData = await resolveRes.json().catch(() => ({}))
-    if (!resolveRes.ok || !resolveData.email) {
-      setError(resolveData.error ?? 'Неверный логин')
-      setLoading(false)
-      return
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: resolveData.email, password,
-    })
-    if (error) {
-      setError(humanizeAuthError(error.message))
-      setLoading(false)
-      return
-    }
-    if (data.user) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: profile } = await (supabase.from('profiles') as any)
-          .select('username').eq('id', data.user.id).single()
-        if (!profile) {
-          router.push('/setup-profile')
-          router.refresh()
-          return
-        }
-      } catch {
-        // profile fetch failed — proceed to home, proxy will redirect if needed
+    // Sign-in целиком на сервере: email по нику наружу не отдаётся,
+    // сессионные куки ставит серверный клиент.
+    let loginData: { ok?: boolean; hasProfile?: boolean; error?: string } = {}
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: loginField, password }),
+      })
+      loginData = await res.json().catch(() => ({}))
+      if (!res.ok || !loginData.ok) {
+        setError(loginData.error ?? 'Неверный логин или пароль')
+        setLoading(false)
+        return
       }
+    } catch {
+      setError('Не получилось войти. Проверь интернет и попробуй ещё раз.')
+      setLoading(false)
+      return
+    }
+    if (!loginData.hasProfile) {
+      router.push('/setup-profile')
+      router.refresh()
+      return
     }
     router.push(next)
     router.refresh()

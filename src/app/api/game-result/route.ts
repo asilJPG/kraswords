@@ -97,8 +97,8 @@ export async function POST(req: Request) {
     isNewBest = solved
   }
 
-  if (solved && isNewBest && !existing) {
-    // Increment solver count only on first successful solve
+  // First successful solve: either no record yet, or the earlier attempt was unsolved
+  if (solved && (!existing || !existing.solved)) {
     const { data: cw } = await (admin.from('crosswords') as any)
       .select('solvers').eq('id', crossword_id).single()
     if (cw) {

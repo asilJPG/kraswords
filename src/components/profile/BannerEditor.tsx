@@ -128,15 +128,13 @@ export default function BannerEditor({ userId, currentBannerUrl, onSaved, onClos
     ctx.beginPath()
     ctx.moveTo(lastPos.current.x, lastPos.current.y)
     ctx.lineTo(pos.x, pos.y)
-    ctx.strokeStyle = tool === 'eraser' ? '#00000000' : color
+    // Ластик рисует цветом подложки: destination-out давал прозрачные дыры,
+    // которые при сохранении в JPEG становились чёрными.
+    ctx.strokeStyle = tool === 'eraser' ? '#f5f5f5' : color
     ctx.lineWidth = tool === 'eraser' ? size * 12 : size * 3
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
-    if (tool === 'eraser') {
-      ctx.globalCompositeOperation = 'destination-out'
-    } else {
-      ctx.globalCompositeOperation = 'source-over'
-    }
+    ctx.globalCompositeOperation = 'source-over'
     ctx.stroke()
     lastPos.current = pos
   }

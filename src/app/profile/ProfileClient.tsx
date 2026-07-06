@@ -71,9 +71,12 @@ export default function ProfileClient({ userId, userEmail, dbHistory, titleById,
     const days = [...new Set(solved.map(h => h.date.slice(0, 10)))]
       .sort((a, b) => b.localeCompare(a))
     if (!days.length) return 0
+    // серия жива, только если последнее решение — сегодня или вчера
+    const today = new Date().toISOString().slice(0, 10)
+    if (Math.floor((Date.parse(today) - Date.parse(days[0])) / 86400000) > 1) return 0
     let count = 1
     for (let i = 1; i < days.length; i++) {
-      const diff = Math.floor((new Date(days[i-1]).getTime() - new Date(days[i]).getTime()) / 86400000)
+      const diff = Math.floor((Date.parse(days[i-1]) - Date.parse(days[i])) / 86400000)
       if (diff === 1) count++; else break
     }
     return count
@@ -86,13 +89,12 @@ export default function ProfileClient({ userId, userEmail, dbHistory, titleById,
     progress['solve_all'] = Math.min(solved.length, 6)
     progress['speed_3min'] = solved.some(h => h.time < 180) ? 1 : 0
     progress['speed_5min'] = solved.some(h => h.time < 300) ? 1 : 0
-    const sortedByDate = [...solved].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    let maxStreak = 0, run = 0
-    for (let i = 0; i < sortedByDate.length; i++) {
-      if (i === 0) { run = 1 } else {
-        const diff = Math.floor((new Date(sortedByDate[i].date).getTime() - new Date(sortedByDate[i - 1].date).getTime()) / 86400000)
-        run = diff <= 1 ? run + 1 : 1
-      }
+    // «3 дня подряд» — по уникальным дням, несколько решений в один день не считаются серией
+    const solveDays = [...new Set(solved.map(h => h.date.slice(0, 10)))].sort()
+    let maxStreak = solveDays.length ? 1 : 0, run = 1
+    for (let i = 1; i < solveDays.length; i++) {
+      const diff = Math.floor((Date.parse(solveDays[i]) - Date.parse(solveDays[i - 1])) / 86400000)
+      run = diff === 1 ? run + 1 : 1
       maxStreak = Math.max(maxStreak, run)
     }
     progress['streak_3'] = Math.min(maxStreak, 3)

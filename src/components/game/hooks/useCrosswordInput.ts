@@ -45,7 +45,7 @@ export function useCrosswordInput({
   }, [directionRef, crossword.clues, moveSelected])
 
   const writeLetter = useCallback((letter: string) => {
-    if (!selected) return
+    if (!selected || solved) return
     const { row, col } = selected
     const next = { ...inputRef.current, [`${row},${col}`]: letter }
     setInput(next)
@@ -55,10 +55,10 @@ export function useCrosswordInput({
       setSolved(true)
       onSolvedRef.current(next)
     }
-  }, [selected, advanceCaret, checkSolved])
+  }, [selected, solved, advanceCaret, checkSolved])
 
   const handleBackspace = useCallback(() => {
-    if (!selected) return
+    if (!selected || solved) return
     const { row, col } = selected
     const key = `${row},${col}`
     if (inputRef.current[key]) {
@@ -75,7 +75,7 @@ export function useCrosswordInput({
         setInput(prev => { const n = { ...prev }; delete n[k]; return n })
       }
     }
-  }, [selected, directionRef, cells, moveSelected])
+  }, [selected, solved, directionRef, cells, moveSelected])
 
   // physical keyboard
   const handleKey = useCallback((e: KeyboardEvent) => {
