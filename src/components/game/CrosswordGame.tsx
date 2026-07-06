@@ -73,8 +73,38 @@ export default function CrosswordGame({ crossword, isLoggedIn = true }: { crossw
     },
   })
 
-  const { timer, reset: resetTimer } = useTimer(sel.running, inp.solved)
+  const { timer, reset: resetTimer, restore: restoreTimer } = useTimer(sel.running, inp.solved)
   useEffect(() => { timerRef.current = timer }, [timer])
+
+  // ─── Автосохранение прогресса ───
+  const progressKey = `kraswords_progress_${crossword.id}`
+  const restoredRef = useRef(false)
+
+  useEffect(() => {
+    if (restoredRef.current) return
+    restoredRef.current = true
+    try {
+      const raw = localStorage.getItem(progressKey)
+      if (!raw) return
+      const saved = JSON.parse(raw) as { input?: Record<string, string>; timer?: number; hintsLeft?: number }
+      if (!saved?.input || Object.keys(saved.input).length === 0) return
+      // полностью решённый сейв не восстанавливаем — пусть игра начнётся заново
+      const allCorrect = Object.entries(correctLetters).every(([k, l]) => saved.input![k] === l)
+      if (allCorrect) { localStorage.removeItem(progressKey); return }
+      inp.hydrate(saved.input)
+      restoreTimer(saved.timer ?? 0)
+      if (typeof saved.hintsLeft === 'number') setHintsLeft(saved.hintsLeft)
+    } catch { /* битый сейв — игнор */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    try {
+      if (inp.solved) { localStorage.removeItem(progressKey); return }
+      if (Object.keys(inp.input).length === 0) return
+      localStorage.setItem(progressKey, JSON.stringify({ input: inp.input, timer, hintsLeft }))
+    } catch { /* квота/приватный режим — игнор */ }
+  }, [inp.input, inp.solved, timer, hintsLeft, progressKey])
 
   const activeClueObj = sel.activeClue
     ? crossword.clues.find(c => getClueKey(c) === sel.activeClue) || null
@@ -91,6 +121,7 @@ export default function CrosswordGame({ crossword, isLoggedIn = true }: { crossw
     resetTimer()
     sel.reset()
     setHintsLeft(3)
+    try { localStorage.removeItem(progressKey) } catch { /* ignore */ }
   }
 
   // Подсказка: выбранная клетка, если пустая/неверная; иначе первая такая

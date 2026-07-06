@@ -57,6 +57,11 @@ export function useCrosswordInput({
     }
   }, [selected, solved, advanceCaret, checkSolved])
 
+  // Восстановление сохранённого прогресса (автосейв в CrosswordGame)
+  const hydrate = useCallback((saved: Record<string, string>) => {
+    setInput(saved)
+  }, [])
+
   // Подсказка: вписать букву в произвольную клетку (не двигает каретку)
   const revealLetter = useCallback((row: number, col: number, letter: string) => {
     if (solved) return
@@ -123,7 +128,7 @@ export function useCrosswordInput({
 
   return {
     input, checked, solved,
-    handleMobileInput, handleBackspace, revealLetter,
+    handleMobileInput, handleBackspace, revealLetter, hydrate,
     setChecked, reset,
   }
 }

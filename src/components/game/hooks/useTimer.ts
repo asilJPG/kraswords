@@ -29,5 +29,11 @@ export function useTimer(running: boolean, frozen: boolean) {
     if (startRef.current !== null) startRef.current = Date.now()
     setTimer(0)
   }
-  return { timer, reset }
+
+  // восстановление времени из автосейва (до старта таймера)
+  const restore = (seconds: number) => {
+    baseRef.current = seconds
+    setTimer(Math.floor(seconds))
+  }
+  return { timer, reset, restore }
 }
