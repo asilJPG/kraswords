@@ -1,6 +1,7 @@
 'use client'
 
 import type { CrosswordMeta } from './hooks/useEditorState'
+import HeroGenerator, { type HeroImage } from './HeroGenerator'
 
 interface Props {
   meta: CrosswordMeta
@@ -167,6 +168,11 @@ export default function MetaForm({ meta, onChange }: Props) {
           )}
         </div>
       )}
+
+      <HeroGenerator
+        heroImage={(meta.theme_custom?.heroImage as HeroImage | undefined) ?? null}
+        onApply={hero => onChange({ ...meta, theme_custom: { ...(meta.theme_custom || {}), heroImage: hero } })}
+      />
 
       <Field label="сложность">
         <select value={meta.difficulty} onChange={e => set('difficulty', e.target.value as typeof difficulties[number])} style={inp}>
